@@ -129,4 +129,14 @@ dmypy.json
 .pyre/
 
 # Do not keep data in the repo
-Data/*
+data/*
+data
+
+# vs code
+.vscode
+
+# R
+.Rhistory
+**/.Rhistory
+
+.DS_Store
