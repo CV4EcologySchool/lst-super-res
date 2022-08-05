@@ -1,7 +1,10 @@
-PyYAML
-tqdm
+PyYAML==6.0
+tqdm==4.62.3
 
 # PyTorch
 --find-links https://download.pytorch.org/whl/torch_stable.html
-torch==1.9.0+cu111
-torchvision==0.10.0+cu111
+torch==1.12.1
+torchvision==0.13.1
+
+pandas==1.4.3
+yaml
