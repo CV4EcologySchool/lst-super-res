@@ -19,12 +19,6 @@ data -- in AWS S3
   - input_LST
   - output_LST
 
-
-# Animal Classification in Camera Trap Images
-
-Example repository for the CV4Ecology 2022 Summer School to train and test deep
-learning models on camera trap images, using the [CCT20 dataset](https://lila.science/datasets/caltech-camera-traps).
-
 ## Installation instructions
 
 1. Install [Conda](http://conda.io/)
@@ -32,8 +26,8 @@ learning models on camera trap images, using the [CCT20 dataset](https://lila.sc
 2. Create environment and install requirements
 
 ```bash
-conda create -n cv4ecology python=3.8 -y
-conda activate cv4ecology
+conda create -n lst-super-res python=3.9 -y
+conda activate lst-super-res
 pip install -r requirements.txt
 ```
 
