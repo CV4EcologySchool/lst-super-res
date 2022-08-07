@@ -36,6 +36,8 @@ print(f'Using config "{args.config}"')
 cfg = yaml.safe_load(open(args.config, 'r'))
 
 data_root = cfg['data_root']
+target_path = cfg['target_path']
+basemap_path = cfg['basemap_path']
 
 # read in the metadata for each run
 metadata = pd.read_csv(os.path.join(data_root, "metadata", "run_metadata.csv"))

@@ -6,6 +6,8 @@ num_workers: 4
 
 # dataset parameters
 data_root: /Users/annaboser/Documents/GitHub/lst-super-res/data
+target_path: /Users/annaboser/Documents/GitHub/lst-super-res/data/tiles/LST
+basemap_path: /Users/annaboser/Documents/GitHub/lst-super-res/data/tiles/RGB
 
 # training hyperparameters
 image_size: [224, 224]
