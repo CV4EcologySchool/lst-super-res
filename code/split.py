@@ -63,14 +63,14 @@ metadata['Hour'] = metadata["Earliest.Time"].apply(lambda x:datetime.strptime(x,
 
 # list out all of the files in the target and basemap folders
 # files = os.listdir(path = os.path.join(data_root, "tiles", "**", "*.tif"))
-filesLST = os.listdir(path = os.path.join(data_root, "tiles/LST/"))
-filesRGB = os.listdir(path = os.path.join(data_root, "tiles/RGB/"))
+filesLST = os.listdir(path = os.path.join(basemap_path))
+filesRGB = os.listdir(path = os.path.join(target_path))
 files = filesLST + filesRGB
 
 # make sure there is a matching file in LST and RGB
 unique_files = pd.unique(files)
 if (len(unique_files) != len(files)/2):
-    print("Warning: Not all LST files or RGB files have a match")
+    print("Warning: Not all target files or basemap files have a match")
 
 # extract the run id from the tiles
 Run_ID = [f.split('_')[0] for f in unique_files]
