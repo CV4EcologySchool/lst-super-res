@@ -1,0 +1,156 @@
+'''
+    This script will create a file that specifies the training/validation/test split for the data. 
+    The split will group tiles by the date and location because nearby flights occured at the same time on a given data collection day. 
+    We then split these groups randomly 60/10/30. 
+
+    This script also outputs some statistics on the split to ensure that there is a relatively even split across train/val/test for 
+    1. country/US state 
+    2. The time when the tile was collected
+    3. The general land cover type
+
+    We also make sure the number of tiles are approximately split 60/10/30 since each date and location combination can have very different numbers of tiles
+
+    2022 Anna Boser
+'''
+
+from logging import raiseExceptions
+import os
+from numpy import tile
+import pandas as pd
+import argparse
+import yaml
+import random
+import numpy as np
+import re
+from datetime import datetime
+
+train_prop = 6
+val_prop = 1
+test_prop = 3
+
+# load config
+parser = argparse.ArgumentParser(description='Train deep learning model.')
+parser.add_argument('--config', help='Path to config file', default='configs/base.yaml')
+args = parser.parse_args()
+print(f'Using config "{args.config}"')
+cfg = yaml.safe_load(open(args.config, 'r'))
+
+data_root = cfg['data_root']
+
+# read in the metadata for each run
+metadata = pd.read_csv(os.path.join(data_root, "metadata", "run_metadata.csv"))
+
+# remove the unusable runs
+metadata = metadata[metadata['Unusable runs'] != 1.0]
+
+# pool mountainous, desert, and rural into natural and suburban into urban
+def convert(lctype):
+    if (lctype == 'Natural' or lctype == 'Urban' or lctype == 'Agricultural'):
+        return lctype
+    elif (lctype == 'Mountainous' or lctype == 'Desert' or lctype == 'Rural'):
+        return 'Natural'
+    elif (lctype == 'Suburban'):
+        return 'Urban'
+    else:
+        raise Exception("Unknown landcover type")
+
+metadata['Main Cover'] = [convert(lct) for lct in metadata['Main Cover']]
+
+# get the hour of day of image aquisition
+metadata['Hour'] = metadata["Earliest.Time"].apply(lambda x:datetime.strptime(x, '%m/%d/%Y %H:%M')).apply(lambda x: x.hour)
+
+# list out all of the files in the target and basemap folders
+# files = os.listdir(path = os.path.join(data_root, "tiles", "**", "*.tif"))
+filesLST = os.listdir(path = os.path.join(data_root, "tiles/LST/"))
+filesRGB = os.listdir(path = os.path.join(data_root, "tiles/RGB/"))
+files = filesLST + filesRGB
+
+# make sure there is a matching file in LST and RGB
+unique_files = pd.unique(files)
+if (len(unique_files) != len(files)/2):
+    print("Warning: Not all LST files or RGB files have a match")
+
+# extract the run id from the tiles
+Run_ID = [f.split('_')[0] for f in unique_files]
+Group_ID = [re.sub("(?<=[A-z])[0-9]*", "", rid) for rid in Run_ID] # remove the run number afer each group name
+
+# create a random 60/10/30 split grouped by Group_ID, assuming each group is approximately the same size
+random_draw = list(np.repeat('train', train_prop)) + list(np.repeat('val', val_prop)) + list(np.repeat('test', test_prop))
+split_dic = {gid: random.choice(random_draw) for gid in set(Group_ID)}
+split = [split_dic[gid] for gid in Group_ID]
+
+# create a metadata file for each tile with landocver, county, etc info
+zipped = list(zip(unique_files, Run_ID, Group_ID, split))
+tile_df = pd.DataFrame(zipped, columns=["tiles", "Run_ID", "Group_ID", "split"])
+tile_metadata = pd.merge(tile_df, metadata, on = "Run_ID")
+
+# save the split
+
+# create the splits folder in the metadata folder if it doesn't exist already
+output_dir = os.path.join(data_root, "metadata", "splits")
+
+if not os.path.exists(output_dir):
+    os.mkdir(output_dir)
+
+# get the date-time to name this iteration of the split
+outfile = str(datetime.now()).replace(" ", "_")
+
+tile_metadata.to_csv(os.path.join(output_dir, outfile + ".csv"))
+
+# generate and save information about the split
+
+# generate a file which spits out the configurations as the header, and information about the distribution across the axes discussed above
+def get_split_props():
+    splits = list(set(tile_metadata['split']))
+    df = pd.DataFrame(columns = splits)
+    df.loc[len(df)] = [list((tile_metadata[tile_metadata['split'] == split]['split'])).count(split)/len(tile_metadata) for split in splits]
+    return(df)
+
+def get_props(col):
+    types = list(set(tile_metadata[col]))
+    splits = list(set(tile_metadata['split']))
+    df = pd.DataFrame(columns = [col] + splits)
+    for type in types:
+        df.loc[len(df)] = [type] + [list((tile_metadata[tile_metadata['split']== split][col])).count(type)/len(tile_metadata[tile_metadata['split'] == split]) for split in splits]
+    return(df)
+
+# occurance of tiles in train, val and test
+split = get_split_props()
+
+# relative occurance of primarily natural 
+lct = get_props('Main Cover')
+
+# relative occurance of a country/state
+state = get_props('State')
+
+# relative occurance of hour of day
+hour = get_props('Hour')
+
+# create the splits folder in the metadata folder if it doesn't exist already
+output_dir = os.path.join(data_root, "metadata", "splits", "info")
+
+if not os.path.exists(output_dir):
+    os.mkdir(output_dir)
+
+with open(os.path.join(output_dir, outfile + ".txt"),"w") as file:
+    file.write("Config:\n")
+    file.write(str(cfg))
+    file.write("\n\n")
+    file.write("Number of tiles:\n")
+    file.write(str(len(tile_metadata)))
+    file.write("\n\n")
+    file.write("Number of groups:\n")
+    file.write(str(len(set(tile_metadata["Group_ID"]))))
+    file.write("\n\n")
+    file.write("Split:\n")
+    file.write(str(split))
+    file.write("\n\n")
+    file.write("Land cover:\n")
+    file.write(str(lct))
+    file.write("\n\n")
+    file.write("State/country:\n")
+    file.write(str(state))
+    file.write("\n\n")
+    file.write("Time of day:\n")
+    file.write(str(hour))
+    file.write("\n\n")
