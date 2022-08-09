@@ -7,4 +7,9 @@ torch==1.12.1
 torchvision==0.13.1
 
 pandas==1.4.3
-yaml
+
+# from Pytorch_UNet
+matplotlib
+Pillow
+tqdm
+wandb

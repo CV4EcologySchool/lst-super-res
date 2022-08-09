@@ -140,3 +140,6 @@ data
 **/.Rhistory
 
 .DS_Store
+
+
+checkpoints

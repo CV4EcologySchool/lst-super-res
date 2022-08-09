@@ -34,3 +34,17 @@ class UNet(nn.Module):
         x = self.up4(x, x1)
         logits = self.outc(x)
         return logits
+
+
+# if __name__ == '__main__':
+
+#     n_channels = 4
+#     size = (504, 504)
+
+#     in_tensor = torch.randn(size=(1,n_channels,size[0],size[1]))
+
+#     model = UNet(n_channels, n_classes=5)
+
+#     pred = model(in_tensor)
+
+#     print(pred.size())

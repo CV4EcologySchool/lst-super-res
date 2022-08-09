@@ -24,9 +24,9 @@ import numpy as np
 import re
 from datetime import datetime
 
-train_prop = 6
-val_prop = 1
-test_prop = 3
+train_prop = .6
+val_prop = .1
+test_prop = .3
 
 # load config
 parser = argparse.ArgumentParser(description='Train deep learning model.')
@@ -36,8 +36,9 @@ print(f'Using config "{args.config}"')
 cfg = yaml.safe_load(open(args.config, 'r'))
 
 data_root = cfg['data_root']
-target_path = cfg['target_path']
-basemap_path = cfg['basemap_path']
+input_basemap = cfg['input_basemap']
+input_target = cfg['input_target']
+output_target = cfg['output_target']
 
 # read in the metadata for each run
 metadata = pd.read_csv(os.path.join(data_root, "metadata", "run_metadata.csv"))
@@ -62,14 +63,14 @@ metadata['Main Cover'] = [convert(lct) for lct in metadata['Main Cover']]
 metadata['Hour'] = metadata["Earliest.Time"].apply(lambda x:datetime.strptime(x, '%m/%d/%Y %H:%M')).apply(lambda x: x.hour)
 
 # list out all of the files in the target and basemap folders
-# files = os.listdir(path = os.path.join(data_root, "tiles", "**", "*.tif"))
-filesLST = os.listdir(path = os.path.join(basemap_path))
-filesRGB = os.listdir(path = os.path.join(target_path))
-files = filesLST + filesRGB
+input_basemap_files = os.listdir(path = os.path.join(input_basemap))
+input_target_files = os.listdir(path = os.path.join(input_target))
+output_target_files = os.listdir(path = os.path.join(output_target))
+files = input_basemap_files + input_target_files + output_target_files
 
 # make sure there is a matching file in LST and RGB
 unique_files = pd.unique(files)
-if (len(unique_files) != len(files)/2):
+if (len(unique_files) != len(files)/3):
     print("Warning: Not all target files or basemap files have a match")
 
 # extract the run id from the tiles
@@ -77,8 +78,12 @@ Run_ID = [f.split('_')[0] for f in unique_files]
 Group_ID = [re.sub("(?<=[A-z])[0-9]*", "", rid) for rid in Run_ID] # remove the run number afer each group name
 
 # create a random 60/10/30 split grouped by Group_ID, assuming each group is approximately the same size
-random_draw = list(np.repeat('train', train_prop)) + list(np.repeat('val', val_prop)) + list(np.repeat('test', test_prop))
-split_dic = {gid: random.choice(random_draw) for gid in set(Group_ID)}
+random_GID = list(set(Group_ID))
+random.shuffle(random_GID)
+split_dic_train = {gid: 'train' for gid in random_GID[:int(np.floor(train_prop*len(random_GID)))]}
+split_dic_val = {gid: 'val' for gid in random_GID[int(np.floor(train_prop*len(random_GID))):int(np.floor((train_prop + val_prop)*len(random_GID)))]}
+split_dic_test = {gid: 'test' for gid in random_GID[int(np.floor((train_prop + val_prop)*len(random_GID))):]}
+split_dic = split_dic_train | split_dic_val | split_dic_test
 split = [split_dic[gid] for gid in Group_ID]
 
 # create a metadata file for each tile with landocver, county, etc info

@@ -1,0 +1,22 @@
+{
+    "os": "macOS-10.16-x86_64-i386-64bit",
+    "python": "3.9.12",
+    "heartbeatAt": "2022-08-08T23:20:18.097312",
+    "startedAt": "2022-08-08T23:20:17.358134",
+    "docker": null,
+    "cpu_count": 16,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "/Users/annaboser/Documents/GitHub/lst-super-res/code/train.py",
+    "codePath": "code/train.py",
+    "git": {
+        "remote": "https://github.com/CV4EcologySchool/lst-super-res.git",
+        "commit": "16523cbd0b6c03c18c934f77d4244db96ad65a17"
+    },
+    "email": "46419226+anna-boser@users.noreply.github.com",
+    "root": "/Users/annaboser/Documents/GitHub/lst-super-res",
+    "host": "Annas-Work-MacBook.local",
+    "username": "annaboser",
+    "executable": "/opt/anaconda3/envs/lst-super-res/bin/python"
+}

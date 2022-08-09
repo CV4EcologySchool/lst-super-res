@@ -6,12 +6,12 @@ num_workers: 4
 
 # dataset parameters
 data_root: /Users/annaboser/Documents/GitHub/lst-super-res/data
-target_path: /Users/annaboser/Documents/GitHub/lst-super-res/data/tiles/LST
-basemap_path: /Users/annaboser/Documents/GitHub/lst-super-res/data/tiles/RGB
 
-# training hyperparameters
-image_size: [224, 224]
-num_epochs: 200
-batch_size: 128
-learning_rate: 0.001
-weight_decay: 0.001
+input_basemap: /Users/annaboser/Documents/GitHub/lst-super-res/data/inputs/RGB_5
+input_target: /Users/annaboser/Documents/GitHub/lst-super-res/data/inputs/LST_70_5
+output_target: /Users/annaboser/Documents/GitHub/lst-super-res/data/outputs/LST_5
+
+splits_loc: /Users/annaboser/Documents/GitHub/lst-super-res/data/metadata/splits
+
+target_norm_loc: /Users/annaboser/Documents/GitHub/lst-super-res/data/metadata/normalizations/target_mean_sd_files70_5.txt
+basemap_norm_loc: /Users/annaboser/Documents/GitHub/lst-super-res/data/metadata/normalizations/basemap_mean_sd_files70_5.txt
