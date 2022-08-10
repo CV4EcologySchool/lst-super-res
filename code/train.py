@@ -25,7 +25,6 @@ def train_net(cfg,
               epochs: int = 5,
               batch_size: int = 1,
               learning_rate: float = 1e-5,
-              val_percent: float = 0.1,
               save_checkpoint: bool = True,
               img_scale: float = 0.5,
               amp: bool = False):
@@ -41,7 +40,7 @@ def train_net(cfg,
     # (Initialize logging)
     experiment = wandb.init(project='U-Net', resume='allow', anonymous='must')
     experiment.config.update(dict(epochs=epochs, batch_size=batch_size, learning_rate=learning_rate,
-                                  val_percent=val_percent, save_checkpoint=save_checkpoint, img_scale=img_scale,
+                                  save_checkpoint=save_checkpoint, img_scale=img_scale,
                                   amp=amp))
 
     logging.info(f'''Starting training:
@@ -56,7 +55,7 @@ def train_net(cfg,
 
     # 4. Set up the optimizer, the loss, the learning rate scheduler and the loss scaling for AMP
     optimizer = optim.RMSprop(net.parameters(), lr=learning_rate, weight_decay=1e-8, momentum=0.9)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=2)  # goal: maximize Dice score
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2)  # goal: minimize MSE
     grad_scaler = torch.cuda.amp.GradScaler(enabled=amp)
     criterion = nn.MSELoss(reduction='none')
     global_step = 0
@@ -74,14 +73,19 @@ def train_net(cfg,
                     f'Network has been defined with {net.n_channels} input channels, ' \
                     f'but loaded images have {images.shape[1]} channels. Please check that ' \
                     'the images are loaded correctly.'
+                assert torch.logical_not(torch.isnan(images).any()), \
+                    f'NaN value detected in input image.' \
 
                 images = images.to(device=device, dtype=torch.float32)
                 true_labels = true_labels.to(device=device, dtype=torch.float32)
 
+                mask = torch.isnan(true_labels)
+
                 with torch.cuda.amp.autocast(enabled=amp):
                     pred = net(images)
+                    true_labels[mask] = -3.4e+30 # set missing values to any real number -- doesn't matter because it will be ignored in the loss. 
                     loss = criterion(pred, true_labels)
-                    loss[torch.isnan(loss)] = 0             # ignore pixel locations where target LST is NaN
+                    loss[mask] = 0             # ignore pixel locations where target LST is NaN
                     loss = loss.mean()
 
                 optimizer.zero_grad(set_to_none=True)
@@ -112,14 +116,14 @@ def train_net(cfg,
                         val_score = evaluate(net, val_loader, device)
                         scheduler.step(val_score)
 
-                        logging.info('Validation Dice score: {}'.format(val_score))
+                        logging.info('Validation score: {}'.format(val_score))
                         experiment.log({
                             'learning rate': optimizer.param_groups[0]['lr'],
-                            'validation Dice': val_score,
+                            'validation': val_score,
                             'images': wandb.Image(images[0].cpu()),
-                            'masks': {
+                            'labels': {
                                 'true': wandb.Image(true_labels[0].float().cpu()),
-                                'pred': wandb.Image(pred.argmax(dim=1)[0].float().cpu()),
+                                'pred': wandb.Image(pred[0].float().cpu()),
                             },
                             'step': global_step,
                             'epoch': epoch,
@@ -133,7 +137,7 @@ def train_net(cfg,
 
 
 def get_args():
-    parser = argparse.ArgumentParser(description='Train the UNet on images and target masks')
+    parser = argparse.ArgumentParser(description='Train the UNet on images and target labels')
     parser.add_argument('--config', help='Path to config file', default='configs/base.yaml')
     parser.add_argument('--epochs', '-e', metavar='E', type=int, default=5, help='Number of epochs')
     parser.add_argument('--batch-size', '-b', dest='batch_size', metavar='B', type=int, default=1, help='Batch size')
@@ -184,7 +188,6 @@ if __name__ == '__main__':
                   learning_rate=args.lr,
                   device=device,
                   img_scale=args.scale,
-                  val_percent=args.val / 100,
                   amp=args.amp)
     except KeyboardInterrupt:
         torch.save(net.state_dict(), 'INTERRUPTED.pth')

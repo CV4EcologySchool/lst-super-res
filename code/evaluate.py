@@ -1,36 +1,30 @@
 import torch
 import torch.nn.functional as F
 from tqdm import tqdm
+import torch.nn as nn
 
-from utils.dice_score import multiclass_dice_coeff, dice_coeff
+criterion = nn.MSELoss(reduction='none')
 
 
 def evaluate(net, dataloader, device):
     net.eval()
     num_val_batches = len(dataloader)
-    dice_score = 0
+    running_loss = 0
 
     # iterate over the validation set
     for batch in tqdm(dataloader, total=num_val_batches, desc='Validation round', unit='batch', leave=False):
-        image, mask_true = batch['image'], batch['mask']
+        image, label = batch['image'], batch['label']
         # move images and labels to correct device and type
         image = image.to(device=device, dtype=torch.float32)
-        mask_true = mask_true.to(device=device, dtype=torch.long)
-        mask_true = F.one_hot(mask_true, net.n_classes).permute(0, 3, 1, 2).float()
+        label = label.to(device=device, dtype=torch.float32)
 
         with torch.no_grad():
             # predict the mask
-            mask_pred = net(image)
+            pred = net(image)
 
-            # convert to one-hot format
-            if net.n_classes == 1:
-                mask_pred = (F.sigmoid(mask_pred) > 0.5).float()
-                # compute the Dice score
-                dice_score += dice_coeff(mask_pred, mask_true, reduce_batch_first=False)
-            else:
-                mask_pred = F.one_hot(mask_pred.argmax(dim=1), net.n_classes).permute(0, 3, 1, 2).float()
-                # compute the Dice score, ignoring background
-                dice_score += multiclass_dice_coeff(mask_pred[:, 1:, ...], mask_true[:, 1:, ...], reduce_batch_first=False)
+            loss = criterion(pred, label)
+            loss[torch.isnan(loss)] = 0             # ignore pixel locations where target LST is NaN
+            running_loss += loss.mean().item()    # the .item is to extract the value of the tensor with only one number in it
 
            
 
@@ -38,5 +32,5 @@ def evaluate(net, dataloader, device):
 
     # Fixes a potential division by zero error
     if num_val_batches == 0:
-        return dice_score
-    return dice_score / num_val_batches
+        return running_loss
+    return running_loss/ num_val_batches

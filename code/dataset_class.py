@@ -140,6 +140,12 @@ if __name__ == '__main__':
     print(f'Using config "{args.config}"')
     cfg = yaml.safe_load(open(args.config, 'r'))
 
+    dataset = BasicDataset(cfg, 'train')
+    len(dataset)
+    dataset.__getitem__(1)
+    dataset = BasicDataset(cfg, 'val')
+    len(dataset)
+    dataset.__getitem__(1)
     dataset = BasicDataset(cfg, 'test')
     len(dataset)
     dataset.__getitem__(1)
