@@ -144,4 +144,6 @@ data
 
 checkpoints
 
-wandb
+wandb/
+wandb/*
+*.pth

@@ -120,10 +120,13 @@ def train_net(cfg,
                         experiment.log({
                             'learning rate': optimizer.param_groups[0]['lr'],
                             'validation': val_score,
-                            'images': wandb.Image(images[0].cpu()),
+                            'images': {
+                                'basemap': wandb.Image(images[0,1:3,:,:].float().cpu()),
+                                'lst': wandb.Image(images[0,0,:,:].float().cpu())
+                            },
                             'labels': {
                                 'true': wandb.Image(true_labels[0].float().cpu()),
-                                'pred': wandb.Image(pred[0].float().cpu()),
+                                'pred': wandb.Image(pred[0].float().cpu())
                             },
                             'step': global_step,
                             'epoch': epoch,
