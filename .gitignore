@@ -147,3 +147,7 @@ checkpoints
 wandb/
 wandb/*
 *.pth
+
+*.sh
+*.out
+*.err

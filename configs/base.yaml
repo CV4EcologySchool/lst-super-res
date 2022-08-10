@@ -5,13 +5,13 @@ device: cuda
 num_workers: 4
 
 # dataset parameters
-data_root: /Users/annaboser/Documents/GitHub/lst-super-res/data
+data_root: /home/annaboser/lst-super-res/data
 
-input_basemap: /Users/annaboser/Documents/GitHub/lst-super-res/data/inputs/RGB_5
-input_target: /Users/annaboser/Documents/GitHub/lst-super-res/data/inputs/LST_70_5
-output_target: /Users/annaboser/Documents/GitHub/lst-super-res/data/outputs/LST_5
+input_basemap: /home/annaboser/lst-super-res/data/inputs/RGB_5
+input_target: /home/annaboser/lst-super-res/data/inputs/LST_70_5
+output_target: /home/annaboser/lst-super-res/data/outputs/LST_5
 
-splits_loc: /Users/annaboser/Documents/GitHub/lst-super-res/data/metadata/splits
+splits_loc: /home/annaboser/lst-super-res/data/metadata/splits
 
-target_norm_loc: /Users/annaboser/Documents/GitHub/lst-super-res/data/metadata/normalizations/target_mean_sd_files70_5.txt
-basemap_norm_loc: /Users/annaboser/Documents/GitHub/lst-super-res/data/metadata/normalizations/basemap_mean_sd_files70_5.txt
+target_norm_loc: /home/annaboser/lst-super-res/data/metadata/normalizations/target_mean_sd_files70_5.txt
+basemap_norm_loc: /home/annaboser/lst-super-res/data/metadata/normalizations/basemap_mean_sd_files70_5.txt

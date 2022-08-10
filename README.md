@@ -31,6 +31,8 @@ conda activate lst-super-res
 pip install -r requirements.txt
 ```
 
+_Note:_ depending on your setup you might have to install a different version of PyTorch (e.g., compiled against CUDA). See https://pytorch.org/get-started/locally/
+
 3. Download dataset
 
 **NOTE:** Requires the [azcopy CLI](https://docs.microsoft.com/en-us/azure/storage/common/storage-use-azcopy-v10) to be installed and set up on your machine.

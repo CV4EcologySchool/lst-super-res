@@ -33,7 +33,7 @@ def train_net(cfg,
     val_set = BasicDataset(cfg, 'val')
 
     # 2. Create data loaders
-    loader_args = dict(batch_size=batch_size, num_workers=0, pin_memory=True)
+    loader_args = dict(batch_size=batch_size, num_workers=8, pin_memory=True)
     train_loader = DataLoader(train_set, shuffle=True, **loader_args)
     val_loader = DataLoader(val_set, shuffle=False, drop_last=True, **loader_args)
 
