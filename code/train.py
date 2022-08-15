@@ -14,6 +14,10 @@ from dataset_class import BasicDataset
 from evaluate import evaluate
 from unet import UNet
 
+import pandas as pd
+
+from utils.utils import unnormalize_basemap
+
 import yaml
 
 dir_checkpoint = Path('./checkpoints/')
@@ -26,7 +30,6 @@ def train_net(cfg,
               batch_size: int = 1,
               learning_rate: float = 1e-5,
               save_checkpoint: bool = True,
-              img_scale: float = 0.5,
               amp: bool = False):
     # 1. Create dataset
     train_set = BasicDataset(cfg, 'train')
@@ -40,7 +43,7 @@ def train_net(cfg,
     # (Initialize logging)
     experiment = wandb.init(project='U-Net', resume='allow', anonymous='must')
     experiment.config.update(dict(epochs=epochs, batch_size=batch_size, learning_rate=learning_rate,
-                                  save_checkpoint=save_checkpoint, img_scale=img_scale,
+                                  save_checkpoint=save_checkpoint, 
                                   amp=amp))
 
     logging.info(f'''Starting training:
@@ -49,13 +52,12 @@ def train_net(cfg,
         Learning rate:   {learning_rate}
         Checkpoints:     {save_checkpoint}
         Device:          {device.type}
-        Images scaling:  {img_scale}
         Mixed Precision: {amp}
     ''')
 
     # 4. Set up the optimizer, the loss, the learning rate scheduler and the loss scaling for AMP
     optimizer = optim.RMSprop(net.parameters(), lr=learning_rate, weight_decay=1e-8, momentum=0.9)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2)  # goal: minimize MSE
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=10)  # goal: minimize MSE
     grad_scaler = torch.cuda.amp.GradScaler(enabled=amp)
     criterion = nn.MSELoss(reduction='none')
     global_step = 0
@@ -116,16 +118,21 @@ def train_net(cfg,
                         val_score = evaluate(net, val_loader, device)
                         scheduler.step(val_score)
 
+                        # true labels for plotting -- put zero where there's a nan
+                        mask = torch.isnan(true_labels)
+                        true_labels_plot = true_labels.clone()
+                        true_labels_plot[mask] = 0
+
                         logging.info('Validation score: {}'.format(val_score))
                         experiment.log({
                             'learning rate': optimizer.param_groups[0]['lr'],
                             'validation': val_score,
                             'images': {
-                                'basemap': wandb.Image(images[0,1:3,:,:].float().cpu()),
+                                'basemap': wandb.Image(images[0,1:,:,:].cpu(), mode="RGB"),
                                 'lst': wandb.Image(images[0,0,:,:].float().cpu())
                             },
                             'labels': {
-                                'true': wandb.Image(true_labels[0].float().cpu()),
+                                'true': wandb.Image(true_labels_plot[0].float().cpu()),
                                 'pred': wandb.Image(pred[0].float().cpu())
                             },
                             'step': global_step,
@@ -147,7 +154,6 @@ def get_args():
     parser.add_argument('--learning-rate', '-l', metavar='LR', type=float, default=1e-5,
                         help='Learning rate', dest='lr')
     parser.add_argument('--load', '-f', type=str, default=False, help='Load model from a .pth file')
-    parser.add_argument('--scale', '-s', type=float, default=0.5, help='Downscaling factor of the images')
     parser.add_argument('--validation', '-v', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')
     parser.add_argument('--amp', action='store_true', default=False, help='Use mixed precision')
@@ -190,7 +196,6 @@ if __name__ == '__main__':
                   batch_size=args.batch_size,
                   learning_rate=args.lr,
                   device=device,
-                  img_scale=args.scale,
                   amp=args.amp)
     except KeyboardInterrupt:
         torch.save(net.state_dict(), 'INTERRUPTED.pth')

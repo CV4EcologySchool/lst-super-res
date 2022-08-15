@@ -22,8 +22,11 @@ def evaluate(net, dataloader, device):
             # predict the mask
             pred = net(image)
 
+            mask = torch.isnan(label)
+            label[mask] = -3.4e+30 # set missing values to any real number -- doesn't matter because it will be ignored in the loss. 
             loss = criterion(pred, label)
-            loss[torch.isnan(loss)] = 0             # ignore pixel locations where target LST is NaN
+            loss[mask] = 0             # ignore pixel locations where target LST is NaN
+
             running_loss += loss.mean().item()    # the .item is to extract the value of the tensor with only one number in it
 
            

@@ -6,82 +6,76 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from PIL import Image
-from torchvision import transforms
 
 from dataset_class import BasicDataset
 from unet import UNet
-from utils.utils import plot_img_and_mask
+
+from utils.utils import unnormalize_target
+import yaml
+from torch.utils.data import DataLoader
+from tqdm import tqdm
+import pandas as pd
+from pathlib import Path
 
 def predict_img(net,
-                full_img,
-                device,
-                scale_factor=1,
-                out_threshold=0.5):
+                dataloader,
+                device, 
+                target_norms, 
+                predictions_dir):
+
     net.eval()
-    img = torch.from_numpy(BasicDataset.preprocess(full_img, scale_factor, is_mask=False))
-    img = img.unsqueeze(0)
-    img = img.to(device=device, dtype=torch.float32)
+    num_val_batches = len(dataloader)
 
-    with torch.no_grad():
-        output = net(img)
+    # iterate over the validation set
+    for batch in tqdm(dataloader, total=num_val_batches, desc='Making predictions', unit='batch', leave=False):
+        image, name = batch['image'], batch['name']
+        # move images and labels to correct device and type
+        image = image.to(device=device, dtype=torch.float32)
 
-        if net.n_classes > 1:
-            probs = F.softmax(output, dim=1)[0]
-        else:
-            probs = torch.sigmoid(output)[0]
+        with torch.no_grad():
+            # predict the mask
+            pred = net(image)
+            
+            for i, output in enumerate(pred):
+                logging.info(f'\nPredicting image {name} ...')
 
-        tf = transforms.Compose([
-            transforms.ToPILImage(),
-            transforms.Resize((full_img.size[1], full_img.size[0])),
-            transforms.ToTensor()
-        ])
+                # put predictions back into native format
+                output = unnormalize_target(output, target_norms)
 
-        full_mask = tf(probs.cpu()).squeeze()
+                # un-tensorify
+                output = output.numpy()
+                output = output.squeeze()
+                output = Image.fromarray(output)
 
-    if net.n_classes == 1:
-        return (full_mask > out_threshold).numpy()
-    else:
-        return F.one_hot(full_mask.argmax(dim=0), net.n_classes).permute(2, 0, 1).numpy()
+                # save prediction
+                out_filename = os.path.join(predictions_dir, name[i] + ".tif")
+                output.save(out_filename)
 
+                logging.info(f'Predictions saved to {out_filename}')
+
+    return 
 
 def get_args():
     parser = argparse.ArgumentParser(description='Predict masks from input images')
-    parser.add_argument('--model', '-m', default='MODEL.pth', metavar='FILE',
+    parser.add_argument('--config', help='Path to config file', default='configs/base.yaml')
+    parser.add_argument('--model', '-m', default='checkpoints/checkpoint_epoch5.pth', metavar='FILE',
                         help='Specify the file in which the model is stored')
-    parser.add_argument('--input', '-i', metavar='INPUT', nargs='+', help='Filenames of input images', required=True)
-    parser.add_argument('--output', '-o', metavar='OUTPUT', nargs='+', help='Filenames of output images')
-    parser.add_argument('--viz', '-v', action='store_true',
-                        help='Visualize the images as they are processed')
-    parser.add_argument('--no-save', '-n', action='store_true', help='Do not save the output masks')
-    parser.add_argument('--mask-threshold', '-t', type=float, default=0.5,
-                        help='Minimum probability value to consider a mask pixel white')
-    parser.add_argument('--scale', '-s', type=float, default=0.5,
-                        help='Scale factor for the input images')
     parser.add_argument('--bilinear', action='store_true', default=False, help='Use bilinear upsampling')
+    parser.add_argument('--predictions_dir', default="predictions", help='The dirctory to save prediction to')
 
     return parser.parse_args()
 
-
-def get_output_filenames(args):
-    def _generate_name(fn):
-        return f'{os.path.splitext(fn)[0]}_OUT.png'
-
-    return args.output or list(map(_generate_name, args.input))
-
-
-def mask_to_image(mask: np.ndarray):
-    if mask.ndim == 2:
-        return Image.fromarray((mask * 255).astype(np.uint8))
-    elif mask.ndim == 3:
-        return Image.fromarray((np.argmax(mask, axis=0) * 255 / mask.shape[0]).astype(np.uint8))
-
-
 if __name__ == '__main__':
     args = get_args()
-    in_files = args.input
-    out_files = get_output_filenames(args)
 
-    net = UNet(n_channels=3, n_classes=2, bilinear=args.bilinear)
+    print(f'Using config "{args.config}"')
+    cfg = yaml.safe_load(open(args.config, 'r'))
+    loader_args = dict(batch_size=1, num_workers=8, pin_memory=True)
+
+    val_set = BasicDataset(cfg, 'val')
+    val_loader = DataLoader(val_set, shuffle=False, drop_last=True, **loader_args)
+
+    net = UNet(n_channels=4, n_classes=1, bilinear=args.bilinear)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logging.info(f'Loading model {args.model}')
@@ -92,22 +86,12 @@ if __name__ == '__main__':
 
     logging.info('Model loaded!')
 
-    for i, filename in enumerate(in_files):
-        logging.info(f'\nPredicting image {filename} ...')
-        img = Image.open(filename)
+    # get the directory to save predictions to
+    predictions_dir = os.path.join(cfg['data_root'], args.predictions_dir)
+    os.makedirs(predictions_dir, exist_ok=True)
 
-        mask = predict_img(net=net,
-                           full_img=img,
-                           scale_factor=args.scale,
-                           out_threshold=args.mask_threshold,
-                           device=device)
+    # get the normalizations to put the outputs back in their native format
+    target_norm_loc=Path(cfg['target_norm_loc'])
+    target_norms = pd.read_csv(target_norm_loc, delim_whitespace=True).mean()
 
-        if not args.no_save:
-            out_filename = out_files[i]
-            result = mask_to_image(mask)
-            result.save(out_filename)
-            logging.info(f'Mask saved to {out_filename}')
-
-        if args.viz:
-            logging.info(f'Visualizing results for image {filename}, close to continue...')
-            plot_img_and_mask(img, mask)
+    predict_img(net, val_loader, device, target_norms, predictions_dir)

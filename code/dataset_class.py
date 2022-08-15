@@ -18,6 +18,9 @@ from PIL import Image
 from torch.utils.data import Dataset
 import pandas as pd
 
+from utils.utils import normalize_target
+from utils.utils import normalize_basemap
+
 # dataset class
 
 class BasicDataset(Dataset):
@@ -43,17 +46,9 @@ class BasicDataset(Dataset):
             raise RuntimeError(f'No input file found in {self.output_target}, make sure you put your images there')
 
         # normalization factors for preprocessing
-        target_norms = pd.read_csv(self.target_norm_loc, delim_whitespace=True).mean()
-        self.target_mean = target_norms['mean']
-        self.target_sd = target_norms['sd']
+        self.target_norms = pd.read_csv(self.target_norm_loc, delim_whitespace=True).mean()
 
-        basemap_norms = pd.read_csv(self.basemap_norm_loc, delim_whitespace=True).mean()
-        self.basemap_mean1 = basemap_norms['mean1']
-        self.basemap_mean2 = basemap_norms['mean2']
-        self.basemap_mean3 = basemap_norms['mean3']
-        self.basemap_sd1 = basemap_norms['sd1']
-        self.basemap_sd2 = basemap_norms['sd2']
-        self.basemap_sd3 = basemap_norms['sd3']
+        self.basemap_norms = pd.read_csv(self.basemap_norm_loc, delim_whitespace=True).mean()
 
         # get the ids in split
         self.splits_loc = cfg['splits_loc']
@@ -77,20 +72,12 @@ class BasicDataset(Dataset):
         input_target_im = self.toTensor(input_target_im) # no conversion. NA is -3.4e+38
         output_target_im = self.toTensor(output_target_im) # no conversion. NA is -3.4e+38
 
-        input_target_im[input_target_im<=-3.4e+30] = 0      # turn invalid values to zero for model input
-        output_target_im[output_target_im<=-3.4e+30] = float('nan') # -3.4e+38 to NaN 
+        output = normalize_target(output_target_im, self.target_norms, mean_for_nans=False)
 
-        # normalize and generate the inputs and outputs
+        input_target = normalize_target(input_target_im, self.target_norms, mean_for_nans=True)
+        ib1, ib2, ib3 = normalize_basemap(input_basemap_im, self.basemap_norms, n_bands=3)
 
-        # output
-        output = (output_target_im - self.target_mean)/self.target_sd
-
-        # input
-        input_1 = (input_target_im - self.target_mean)/self.target_sd
-        input_2 = (input_basemap_im[[0]] - self.basemap_mean1)/self.basemap_sd1
-        input_3 = (input_basemap_im[[1]] - self.basemap_mean2)/self.basemap_sd2
-        input_4 = (input_basemap_im[[2]] - self.basemap_mean3)/self.basemap_sd3
-        input = torch.cat([input_1, input_2, input_3, input_4], dim=0)
+        input = torch.cat([input_target, ib1, ib2, ib3], dim=0)
 
         return input, output
 
@@ -125,7 +112,8 @@ class BasicDataset(Dataset):
 
         return {
             'image': input,
-            'label': output
+            'label': output, 
+            'name': name
         }
 
 
