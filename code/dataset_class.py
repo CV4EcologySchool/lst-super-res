@@ -17,6 +17,7 @@ from torchvision.transforms import ToTensor
 from PIL import Image
 from torch.utils.data import Dataset
 import pandas as pd
+import albumentations as A
 
 from utils.utils import normalize_target
 from utils.utils import normalize_basemap
@@ -27,6 +28,13 @@ class BasicDataset(Dataset):
     def __init__(self, cfg, split):
 
         self.split = split
+
+        self.transform = A.Compose([
+            A.HorizontalFlip(p=cfg['HorizontalFlip']),
+            A.VerticalFlip(p=cfg['VerticalFlip']),
+            A.GaussNoise(p=cfg['GaussianNoise']),
+            A.RandomRotate90(p=cfg['RandomRotate90'])
+        ])
 
         self.toTensor = ToTensor()
 
@@ -58,6 +66,8 @@ class BasicDataset(Dataset):
         split_file = pd.read_csv(os.path.join(self.splits_loc, recent_split))
 
         self.ids = [splitext(file)[0] for file in split_file[split_file['split'] == self.split]['tiles']]
+
+        self.split_file = split_file # use this later when you get the main landcover of a tile
 
         logging.info(f'Creating dataset with {len(self.ids)} examples')
 
@@ -109,11 +119,21 @@ class BasicDataset(Dataset):
             f'Input and output {name} should be the same size, but are {input_target_im.size} and {output_target_im.size}'
 
         input, output = self.preprocess(input_basemap_im, input_target_im, output_target_im)
+        
+        if self.split == "train":
+            transforms = self.transform(image=input.numpy().transpose(1,2,0), mask=output.numpy().transpose(1,2,0))
+            input = transforms['image']
+            output = transforms['mask']
+            input, output = torch.from_numpy(input.transpose(2,0,1)), torch.from_numpy(output.transpose(2,0,1)) 
+
+        # also get the main class of this particular image
+        landcover = self.split_file[self.split_file['tiles'] == name + ".tif"]["Main Cover"]._values[0]
 
         return {
             'image': input,
             'label': output, 
-            'name': name
+            'name': name,
+            'landcover': landcover
         }
 
 

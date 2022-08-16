@@ -15,3 +15,9 @@ splits_loc: /home/annaboser/lst-super-res/data/metadata/splits
 
 target_norm_loc: /home/annaboser/lst-super-res/data/metadata/normalizations/target_mean_sd_files70_5.txt
 basemap_norm_loc: /home/annaboser/lst-super-res/data/metadata/normalizations/basemap_mean_sd_files70_5.txt
+
+# augmentation probabilities
+HorizontalFlip: 0.5
+VerticalFlip: 0.5
+GaussianNoise: 0.2
+RandomRotate90: 0.5

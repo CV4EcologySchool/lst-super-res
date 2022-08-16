@@ -13,3 +13,8 @@ matplotlib
 Pillow
 tqdm
 wandb
+
+albumentations
+
+jupyterlab
+notebook
