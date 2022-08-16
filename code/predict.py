@@ -62,6 +62,7 @@ def get_args():
                         help='Specify the file in which the model is stored')
     parser.add_argument('--bilinear', action='store_true', default=False, help='Use bilinear upsampling')
     parser.add_argument('--predictions_dir', default="predictions", help='The dirctory to save prediction to')
+    parser.add_argument('--split', default='val', help='The split to make predictions for (train, val, or test)')
 
     return parser.parse_args()
 
@@ -72,7 +73,7 @@ if __name__ == '__main__':
     cfg = yaml.safe_load(open(args.config, 'r'))
     loader_args = dict(batch_size=1, num_workers=8, pin_memory=True)
 
-    val_set = BasicDataset(cfg, 'val')
+    val_set = BasicDataset(cfg, args.split)
     val_loader = DataLoader(val_set, shuffle=False, drop_last=True, **loader_args)
 
     net = UNet(n_channels=4, n_classes=1, bilinear=args.bilinear)
