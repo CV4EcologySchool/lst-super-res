@@ -20,7 +20,7 @@ _Note:_ depending on your setup you might have to install a different version of
 
 3. Add data
 
-The processed dataset for this particular project is currently not publicly available. However, one should manually add inputs and outputs and specify their pathds in a configs/*.yaml file. Speficially, you will need to add paths to three folders:
+The processed dataset for this particular project is currently not publicly available. However, one should manually add inputs and outputs and specify their paths in a configs/*.yaml file. Speficially, you will need to add paths to three folders:
 
 - input_basemap: This folder is constituted of 8-bit, 3-band images of your basemap of choice (in our case RGB), all the same size and resolution (e.g. 672x672 pixels at 10m resolution)
 - input_target: This folder is constituted of single band floating point images of your target (in our case LST) at a coarse resolution (e.g. 70m) but resampled to the same size and resolution as the basemap and the desired output. 
@@ -39,12 +39,24 @@ _Note:_ It is OK to have NA values in the input and output target, but not in yo
 
 1. Train
 
+In the configs folder, create a *.yaml file for your experiment. See base.yaml as a example. 
+
 ```bash
 python code/train.py --config configs/base.yaml
 ```
 
-2. Test/inference
+This will create a trained model which is saved at each epoch in the checkpoints folder
 
-During training, weights and biases (wandb) is used to automatically generate visualizations of the training data and plot out the loss (MSE) of the training and validation sets. 
+2. Predictions
 
-In code/predicy_vis.ipynb, we visialize and evaluate the validation or test split and evaluate the model using MSE and R2 metrics. 
+```bash
+python code/predict.py --config configs/base.yaml --split val
+```
+
+If predictions are desired for another split, you can also specify 'test' or 'train'. 
+
+3. Test/inference
+
+During training, weights and biases (wandb) is used to automatically generate visualizations of the training data and plot out the loss (MSE) of the training and validation sets. Wandb logs are generated and saved in the folder `code/wandb`
+
+Visualize and evaluate your predictions in `code/predict_vis.ipynb`.
