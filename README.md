@@ -13,6 +13,7 @@ This code is highly flexible and, as with the U-Net implementation we borrow our
 ```bash
 conda create -n lst-super-res python=3.9 -y
 conda activate lst-super-res
+conda install pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch -y
 pip install -r requirements.txt
 ```
 
