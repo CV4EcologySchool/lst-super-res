@@ -102,9 +102,9 @@ class BasicDataset(Dataset):
 
     def __getitem__(self, idx):
         name = self.ids[idx]
-        input_basemap_im = list(self.input_basemap.glob(name + '.*'))
-        input_target_im = list(self.input_target.glob(name + '.*'))
-        output_target_im = list(self.output_target.glob(name + '.*'))
+        input_basemap_im = list(self.input_basemap.glob(name + '.tif*'))
+        input_target_im = list(self.input_target.glob(name + '.tif*'))
+        output_target_im = list(self.output_target.glob(name + '.tif*'))
 
         assert len(input_basemap_im) == 1, f'Either no basemap input or multiple basemap inputs found for the ID {name}: {input_basemap_im}'
         assert len(input_target_im) == 1, f'Either no target input or multiple target inputs found for the ID {name}: {input_target_im}'

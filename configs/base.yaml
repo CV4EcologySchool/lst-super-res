@@ -5,16 +5,16 @@ device: cuda
 num_workers: 4
 
 # dataset parameters
-data_root: /home/annaboser/lst-super-res/data
+data_root: /datadrive/For_CNN
 
-input_basemap: /home/annaboser/lst-super-res/data/inputs/RGB_5
-input_target: /home/annaboser/lst-super-res/data/inputs/LST_70_5
-output_target: /home/annaboser/lst-super-res/data/outputs/LST_5
+input_basemap: /datadrive/For_CNN/inputs/RGB_672_10
+input_target: /datadrive/For_CNN/inputs/LST_672_70_10
+output_target: /datadrive/For_CNN/outputs/LST_672_10
 
-splits_loc: /home/annaboser/lst-super-res/data/metadata/splits
+splits_loc: /datadrive/For_CNN/metadata/splits
 
-target_norm_loc: /home/annaboser/lst-super-res/data/metadata/normalizations/target_mean_sd_files70_5.txt
-basemap_norm_loc: /home/annaboser/lst-super-res/data/metadata/normalizations/basemap_mean_sd_files70_5.txt
+target_norm_loc: /datadrive/For_CNN/target_mean_sd_files672_70_10.txt
+basemap_norm_loc: /datadrive/For_CNN/basemap_mean_sd_files672_70_10.txt
 
 # augmentation probabilities
 HorizontalFlip: 0.5

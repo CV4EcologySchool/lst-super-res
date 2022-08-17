@@ -22,18 +22,24 @@ _Note:_ depending on your setup you might have to install a different version of
 
 The processed dataset for this particular project is currently not publicly available. However, one should manually add inputs and outputs and specify their paths in a configs/*.yaml file. Speficially, you will need to add paths to three folders:
 
-- input_basemap: This folder is constituted of 8-bit, 3-band images of your basemap of choice (in our case RGB), all the same size and resolution (e.g. 672x672 pixels at 10m resolution)
-- input_target: This folder is constituted of single band floating point images of your target (in our case LST) at a coarse resolution (e.g. 70m) but resampled to the same size and resolution as the basemap and the desired output. 
-- output_target: This folder is constituted of your labels: single band floating point images of your target (in our case LST) at the desired improved resolution. 
+- `input_basemap`: This folder is constituted of 8-bit, 3-band images of your basemap of choice (in our case RGB), all the same size and resolution (e.g. 672x672 pixels at 10m resolution)
+- `input_target`: This folder is constituted of single band floating point images of your target (in our case LST) at a coarse resolution (e.g. 70m) but resampled to the same size and resolution as the basemap and the desired output. 
+- `output_target`: This folder is constituted of your labels: single band floating point images of your target (in our case LST) at the desired improved resolution. 
 
 _Note:_ Corresponding images should be named the same between folders. 
 
 The location of some metadata must also be included in your configs file:
-- splits_loc: This the location of your file that determines how your dataset is to be split. It should contain a csv with the name of an image and whether it belongs to the "train", "val" or "test" set. The most recent file in this folder are used as your split. 
-- target_norm_loc: This is a space delimited file that includes mean and sd columns with entries for all of your target input images (in our case, LST). The average across these are taken to normalize the inputs. 
-- basemap_norm_loc: This is a space delimited file that includes mean (mean1, mean2, mean3) and sd (sd1, sd2, sd3) columns with entries for all of your input basemap images (in our case, RGB). The average across these are taken to normalize the inputs. 
+- `splits_loc`: This the location of your file that determines how your dataset is to be split. It should contain a csv with the name of an image and whether it belongs to the "train", "val" or "test" set. The most recent file in this folder are used as your split. 
+- `target_norm_loc`: This is a space delimited file that includes mean and sd columns with entries for all of your target input images (in our case, LST). The average across these are taken to normalize the inputs. 
+- `basemap_norm_loc`: This is a space delimited file that includes mean (mean1, mean2, mean3) and sd (sd1, sd2, sd3) columns with entries for all of your input basemap images (in our case, RGB). The average across these are taken to normalize the inputs. 
 
 _Note:_ It is OK to have NA values in the input and output target, but not in your basemap. There is built-in functionality to ignore areas where there is no information: input NAs are set to 0 and output NAs are ignored when calculating the loss.
+
+4. Split data
+
+```bash
+python3 code/split.py
+```
 
 ## Reproduce results
 

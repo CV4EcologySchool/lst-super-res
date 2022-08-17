@@ -151,3 +151,5 @@ wandb/*
 *.sh
 *.out
 *.err
+
+get-pip.py
