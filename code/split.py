@@ -76,7 +76,7 @@ assert len(unique_files) == len(files)/3, f'Warning: Not all target files or bas
 
 # extract the run id from the tiles
 Run_ID = [f.split('_')[0] for f in unique_files]
-Group_ID = [re.sub("(?<=[A-z])[0-9]*", "", rid) for rid in Run_ID] # remove the run number afer each group name
+Group_ID = [re.sub("(?<=[A-z])[0-9]*", "", rid) for rid in Run_ID] # remove the run number after each group name
 
 # create a random 60/10/30 split grouped by Group_ID, assuming each group is approximately the same size
 random_GID = list(set(Group_ID))
