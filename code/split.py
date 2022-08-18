@@ -70,8 +70,9 @@ files = input_basemap_files + input_target_files + output_target_files
 
 # make sure there is a matching file in LST and RGB
 unique_files = pd.unique(files)
-if (len(unique_files) != len(files)/3):
-    print("Warning: Not all target files or basemap files have a match")
+assert len(unique_files) == len(files)/3, f'Warning: Not all target files or basemap files have a match'
+# if (len(unique_files) != len(files)/3):
+#     print("Warning: Not all target files or basemap files have a match")
 
 # extract the run id from the tiles
 Run_ID = [f.split('_')[0] for f in unique_files]
