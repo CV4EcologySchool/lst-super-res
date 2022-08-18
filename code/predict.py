@@ -91,7 +91,7 @@ if __name__ == '__main__':
     logging.info('Model loaded!')
 
     # get the directory to save predictions to
-    predictions_dir = os.path.join(cfg['experiment_dir'], 'predictions')
+    predictions_dir = os.path.join(cfg['experiment_dir'], 'predictions', str(args.split))
     os.makedirs(predictions_dir, exist_ok=True)
 
     # get the normalizations to put the outputs back in their native format

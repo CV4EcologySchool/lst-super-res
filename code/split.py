@@ -2,6 +2,7 @@
     This script will create a file that specifies the training/validation/test split for the data. 
     The split will group tiles by the date and location because nearby flights occured at the same time on a given data collection day. 
     We then split these groups randomly 60/10/30. 
+    Ideally, I should be ensuring there is at least one group that is natural, agricultural, and natural in each split, but this is not yet implemented. 
 
     This script also outputs some statistics on the split to ensure that there is a relatively even split across train/val/test for 
     1. country/US state 

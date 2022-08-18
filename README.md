@@ -54,16 +54,20 @@ python code/train.py --config configs/base.yaml
 
 This will create a trained model which is saved at each epoch in the checkpoints folder
 
-2. Predictions
+2. Predictions and validation
+
+During training, weights and biases (wandb) is used to automatically generate visualizations of the training data and plot out the loss (MSE) of the training and validation sets. Wandb logs are generated and saved in the folder `code/wandb`. 
+
+Generate predictions. These will be saved in the predictions folder of your experiment. If predictions are desired for another split, you can also specify 'test' or 'train'. 
 
 ```bash
 python code/predict.py --config configs/base.yaml --split val
 ```
+Then, visualize and calcualte metrics for your predictions. These are also saved in your experiments folder. 
 
-If predictions are desired for another split, you can also specify 'test' or 'train'. 
+```bash
+python code/predict_vis.py --config configs/base.yaml --split val
+```
 
 3. Test/inference
 
-During training, weights and biases (wandb) is used to automatically generate visualizations of the training data and plot out the loss (MSE) of the training and validation sets. Wandb logs are generated and saved in the folder `code/wandb`
-
-Visualize and evaluate your predictions in `code/predict_vis.ipynb`.

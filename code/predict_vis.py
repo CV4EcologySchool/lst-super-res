@@ -13,7 +13,15 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 
-config = 'configs/base.yaml'
+def get_args():
+    parser = argparse.ArgumentParser(description='Predict masks from input images')
+    parser.add_argument('--config', help='Path to config file', default='configs/base.yaml')
+    parser.add_argument('--split', default='val', help='The split to make predictions for (train, val, or test)')
+
+    return parser.parse_args()
+args = get_args()
+
+config = args.config
 
 print(f'Using config "{config}"')
 cfg = yaml.safe_load(open(config, 'r'))
@@ -22,7 +30,7 @@ input_target = cfg["input_target"]
 output_target = cfg["output_target"]
 
 # the predictions of interest
-predictions_dir = os.path.join(cfg['experiment_dir'], 'predictions')
+predictions_dir = os.path.join(cfg['experiment_dir'], 'predictions', str(args.split))
 
 #get most recent split with info about the landcover
 splits_loc = cfg['splits_loc']
@@ -86,8 +94,8 @@ for image in os.listdir(predictions_dir):
     plt.title(str(landcover))
     plt.axis("off")
 
-    os.makedirs(os.path.join(cfg['experiment_dir'], "prediction_plots"), exist_ok=True)
-    plt.savefig(os.path.join(cfg['experiment_dir'], "prediction_plots", str(image).split(".tif")[0]+".png"))
+    os.makedirs(os.path.join(cfg['experiment_dir'], "prediction_plots", str(args.split)), exist_ok=True)
+    plt.savefig(os.path.join(cfg['experiment_dir'], "prediction_plots", str(args.split), str(image).split(".tif")[0]+".png"))
     # plt.show() # for the notebook version
 
     # add the evaluation metrics to a pandas dataframe
@@ -105,7 +113,8 @@ for image in os.listdir(predictions_dir):
 
 
 # save the pandas dataframe of evaluation metrics as csv
-metrics_df.to_csv(os.path.join(cfg['experiment_dir'], "prediction_metrics.csv"))
+os.makedirs(os.path.join(cfg['experiment_dir'], str(args.split)))
+metrics_df.to_csv(os.path.join(cfg['experiment_dir'], str(args.split), "prediction_metrics.csv"))
 
 # Print out the average metrics
 print(metrics_df.mean())

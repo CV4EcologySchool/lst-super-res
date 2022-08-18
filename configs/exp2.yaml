@@ -1,0 +1,32 @@
+# In this file I have all the general configurations and data
+
+# environment/computational parameters
+device: cuda
+num_workers: 4
+
+# dataset parameters
+data_root: /home/annaboser/lst-super-res/data/
+
+input_basemap: /home/annaboser/lst-super-res/data/For_CNN/inputs/RGB_672_10
+input_target: /home/annaboser/lst-super-res/data/For_CNN/inputs/LST_672_70_10
+output_target: /home/annaboser/lst-super-res/data/For_CNN/outputs/LST_672_10
+
+splits_loc: /home/annaboser/lst-super-res/data/metadata/splits
+
+target_norm_loc: /home/annaboser/lst-super-res/data/For_CNN/target_mean_sd_files672_70_10.txt
+basemap_norm_loc: /home/annaboser/lst-super-res/data/For_CNN/basemap_mean_sd_files672_70_10.txt
+
+# directory to save this experiment's models
+experiment_dir: /home/annaboser/lst-super-res/experiments/exp1
+
+# model params
+learning_rate: 1e-5
+epochs: 100
+batch_size: 128
+
+# augmentation probabilities
+HorizontalFlip: 0.5
+VerticalFlip: 0.5
+GaussianNoise: 0
+GaussianNoise_varLimit: 0.05
+RandomRotate90: 0.5
