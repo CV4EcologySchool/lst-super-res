@@ -15,22 +15,27 @@ from evaluate import evaluate
 from unet import UNet
 
 import pandas as pd
+import shutil
 
 from utils.utils import unnormalize_basemap
 
 import yaml
-
-dir_checkpoint = Path('./checkpoints/')
-
+import os
 
 def train_net(cfg,
               net,
               device,
-              epochs: int = 5,
-              batch_size: int = 1,
-              learning_rate: float = 1e-5,
               save_checkpoint: bool = True,
               amp: bool = False):
+
+    # where to save the trained model and configurations
+    dir_checkpoint = Path(os.path.join(cfg['experiment_dir'], 'checkpoints'))
+
+    # get hyperparameters from configurations
+    epochs = cfg['epochs']
+    batch_size = cfg['batch_size']
+    learning_rate = float(cfg['learning_rate'])
+    
     # 1. Create dataset
     train_set = BasicDataset(cfg, 'train')
     val_set = BasicDataset(cfg, 'val')
@@ -188,13 +193,22 @@ if __name__ == '__main__':
         net.load_state_dict(torch.load(args.load, map_location=device))
         logging.info(f'Model loaded from {args.load}')
 
+    # save the configurations for this experiment in the experiment folder
+    experiments_dir = cfg['experiment_dir']
+    os.makedirs(experiments_dir, exist_ok=True)
+    shutil.copyfile(args.config, os.path.join(experiments_dir, "configs.yaml"))
+
+    # also save the split and split info to the experiments folder
+    splits_loc = cfg["splits_loc"]
+    split_files = [file for file in os.listdir(splits_loc) if file.endswith(".csv")]
+    recent_split = sorted(split_files, key=lambda fn:os.path.getctime(os.path.join(splits_loc, fn)))[-1] # get most recent split
+    shutil.copyfile(os.path.join(splits_loc, recent_split), os.path.join(experiments_dir, "split.csv")) # copy the split
+    shutil.copyfile(os.path.join(splits_loc, "info", recent_split.split(".csv")[0] + ".txt"), os.path.join(experiments_dir, "split_info.csv")) # copy the split info
+
     net.to(device=device)
     try:
         train_net(cfg=cfg,
                   net=net,
-                  epochs=args.epochs,
-                  batch_size=args.batch_size,
-                  learning_rate=args.lr,
                   device=device,
                   amp=args.amp)
     except KeyboardInterrupt:

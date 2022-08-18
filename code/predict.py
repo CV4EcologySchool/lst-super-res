@@ -58,10 +58,9 @@ def predict_img(net,
 def get_args():
     parser = argparse.ArgumentParser(description='Predict masks from input images')
     parser.add_argument('--config', help='Path to config file', default='configs/base.yaml')
-    parser.add_argument('--model', '-m', default='checkpoints/checkpoint_epoch5.pth', metavar='FILE',
+    parser.add_argument('--model_epoch', '-m', default='last', metavar='FILE',
                         help='Specify the file in which the model is stored')
     parser.add_argument('--bilinear', action='store_true', default=False, help='Use bilinear upsampling')
-    parser.add_argument('--predictions_dir', default="predictions", help='The dirctory to save prediction to')
     parser.add_argument('--split', default='val', help='The split to make predictions for (train, val, or test)')
 
     return parser.parse_args()
@@ -79,16 +78,20 @@ if __name__ == '__main__':
     net = UNet(n_channels=4, n_classes=1, bilinear=args.bilinear)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    logging.info(f'Loading model {args.model}')
+    if args.model_epoch == 'last':
+        model_epoch = cfg['epochs']
+    else:
+         model_epoch = args.model_epoch
+    logging.info(f'Loading model checkpoints/checkpoint_epoch{model_epoch}.pth')
     logging.info(f'Using device {device}')
 
     net.to(device=device)
-    net.load_state_dict(torch.load(args.model, map_location=device))
+    net.load_state_dict(torch.load(os.path.join(cfg['experiment_dir'], f'checkpoints/checkpoint_epoch{model_epoch}.pth'), map_location=device))
 
     logging.info('Model loaded!')
 
     # get the directory to save predictions to
-    predictions_dir = os.path.join(cfg['data_root'], args.predictions_dir)
+    predictions_dir = os.path.join(cfg['experiment_dir'], 'predictions')
     os.makedirs(predictions_dir, exist_ok=True)
 
     # get the normalizations to put the outputs back in their native format

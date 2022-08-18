@@ -32,7 +32,7 @@ class BasicDataset(Dataset):
         self.transform = A.Compose([
             A.HorizontalFlip(p=cfg['HorizontalFlip']),
             A.VerticalFlip(p=cfg['VerticalFlip']),
-            A.GaussNoise(p=cfg['GaussianNoise']),
+            A.GaussNoise(var_limit=cfg['GaussianNoise_varLimit'], p=cfg['GaussianNoise']),
             A.RandomRotate90(p=cfg['RandomRotate90'])
         ])
 

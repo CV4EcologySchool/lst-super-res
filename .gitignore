@@ -153,3 +153,5 @@ wandb/*
 *.err
 
 get-pip.py
+
+experiments/*
