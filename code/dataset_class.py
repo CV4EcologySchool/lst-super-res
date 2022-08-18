@@ -150,10 +150,10 @@ if __name__ == '__main__':
 
     dataset = BasicDataset(cfg, 'train')
     len(dataset)
-    dataset.__getitem__(1)
+    [dataset.__getitem__(i) for i in range(len(dataset))]
     dataset = BasicDataset(cfg, 'val')
     len(dataset)
-    dataset.__getitem__(1)
+    [dataset.__getitem__(i) for i in range(len(dataset))]
     dataset = BasicDataset(cfg, 'test')
     len(dataset)
-    dataset.__getitem__(1)
+    [dataset.__getitem__(i) for i in range(len(dataset))]
