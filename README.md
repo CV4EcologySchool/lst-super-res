@@ -61,13 +61,19 @@ During training, weights and biases (wandb) is used to automatically generate vi
 Generate predictions. These will be saved in the predictions folder of your experiment. If predictions are desired for another split, you can also specify 'test' or 'train'. 
 
 ```bash
+python code/predict.py --config configs/base.yaml --split train
 python code/predict.py --config configs/base.yaml --split val
 ```
 Then, visualize and calcualte metrics for your predictions. These are also saved in your experiments folder. 
 
 ```bash
+python code/predict_vis.py --config configs/base.yaml --split train
 python code/predict_vis.py --config configs/base.yaml --split val
 ```
 
 3. Test/inference
 
+```bash
+python code/predict.py --config configs/base.yaml --split test
+python code/predict_vis.py --config configs/base.yaml --split test
+```

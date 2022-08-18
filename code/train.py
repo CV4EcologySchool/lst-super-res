@@ -62,7 +62,7 @@ def train_net(cfg,
 
     # 4. Set up the optimizer, the loss, the learning rate scheduler and the loss scaling for AMP
     optimizer = optim.RMSprop(net.parameters(), lr=learning_rate, weight_decay=1e-8, momentum=0.9)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=10)  # goal: minimize MSE
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=5)  # goal: minimize MSE
     grad_scaler = torch.cuda.amp.GradScaler(enabled=amp)
     criterion = nn.MSELoss(reduction='none')
     global_step = 0
@@ -110,40 +110,41 @@ def train_net(cfg,
                 })
                 pbar.set_postfix(**{'loss (batch)': loss.item()})
 
-                # Evaluation round
-                division_step = (len(train_loader) // (10 * batch_size))
-                if division_step > 0:
-                    if global_step % division_step == 0:
-                        histograms = {}
-                        for tag, value in net.named_parameters():
-                            tag = tag.replace('/', '.')
-                            histograms['Weights/' + tag] = wandb.Histogram(value.data.cpu())
-                            histograms['Gradients/' + tag] = wandb.Histogram(value.grad.data.cpu())
+            
+        # Evaluation round
+        # division_step = (len(train_loader) // (10 * batch_size))
+        # if division_step > 0:
+        #     if global_step % division_step == 0:
+        histograms = {}
+        for tag, value in net.named_parameters():
+            tag = tag.replace('/', '.')
+            histograms['Weights/' + tag] = wandb.Histogram(value.data.cpu())
+            histograms['Gradients/' + tag] = wandb.Histogram(value.grad.data.cpu())
 
-                        val_score = evaluate(net, val_loader, device)
-                        scheduler.step(val_score)
+        val_score = evaluate(net, val_loader, device)
+        scheduler.step(val_score)
 
-                        # true labels for plotting -- put zero where there's a nan
-                        mask = torch.isnan(true_labels)
-                        true_labels_plot = true_labels.clone()
-                        true_labels_plot[mask] = 0
+        # true labels for plotting -- put zero where there's a nan
+        mask = torch.isnan(true_labels)
+        true_labels_plot = true_labels.clone()
+        true_labels_plot[mask] = 0
 
-                        logging.info('Validation score: {}'.format(val_score))
-                        experiment.log({
-                            'learning rate': optimizer.param_groups[0]['lr'],
-                            'validation': val_score,
-                            'images': {
-                                'basemap': wandb.Image(images[0,1:,:,:].cpu(), mode="RGB"),
-                                'lst': wandb.Image(images[0,0,:,:].float().cpu())
-                            },
-                            'labels': {
-                                'true': wandb.Image(true_labels_plot[0].float().cpu()),
-                                'pred': wandb.Image(pred[0].float().cpu())
-                            },
-                            'step': global_step,
-                            'epoch': epoch,
-                            **histograms
-                        })
+        logging.info('Validation score: {}'.format(val_score))
+        experiment.log({
+            'learning rate': optimizer.param_groups[0]['lr'],
+            'validation': val_score,
+            'images': {
+                'basemap': wandb.Image(images[0,1:,:,:].cpu(), mode="RGB"),
+                'lst': wandb.Image(images[0,0,:,:].float().cpu())
+            },
+            'labels': {
+                'true': wandb.Image(true_labels_plot[0].float().cpu()),
+                'pred': wandb.Image(pred[0].float().cpu())
+            },
+            'step': global_step,
+            'epoch': epoch,
+            **histograms
+        })
 
         if save_checkpoint:
             Path(dir_checkpoint).mkdir(parents=True, exist_ok=True)

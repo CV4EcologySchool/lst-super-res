@@ -113,8 +113,8 @@ for image in os.listdir(predictions_dir):
 
 
 # save the pandas dataframe of evaluation metrics as csv
-os.makedirs(os.path.join(cfg['experiment_dir'], str(args.split)))
-metrics_df.to_csv(os.path.join(cfg['experiment_dir'], str(args.split), "prediction_metrics.csv"))
+os.makedirs(os.path.join(cfg['experiment_dir'], 'prediction_metrics', str(args.split)))
+metrics_df.to_csv(os.path.join(cfg['experiment_dir'], 'prediction_metrics', str(args.split), "prediction_metrics.csv"))
 
 # Print out the average metrics
 print(metrics_df.mean())
