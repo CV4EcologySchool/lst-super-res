@@ -97,6 +97,7 @@ for image in os.listdir(predictions_dir):
     os.makedirs(os.path.join(cfg['experiment_dir'], "prediction_plots", str(args.split)), exist_ok=True)
     plt.savefig(os.path.join(cfg['experiment_dir'], "prediction_plots", str(args.split), str(image).split(".tif")[0]+".png"))
     # plt.show() # for the notebook version
+    plt.close('all')
 
     # add the evaluation metrics to a pandas dataframe
     df2 = pd.DataFrame({

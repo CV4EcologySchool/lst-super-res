@@ -43,7 +43,7 @@ def predict_img(net,
                 output = unnormalize_target(output, target_norms)
 
                 # un-tensorify
-                output = output.numpy()
+                output = output.cpu().numpy()
                 output = output.squeeze()
                 output = Image.fromarray(output)
 
