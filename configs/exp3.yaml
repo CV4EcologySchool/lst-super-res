@@ -17,11 +17,11 @@ target_norm_loc: /home/annaboser/lst-super-res/data/For_CNN/target_mean_sd_files
 basemap_norm_loc: /home/annaboser/lst-super-res/data/For_CNN/basemap_mean_sd_files672_70_10.txt
 
 # directory to save this experiment's models
-experiment_dir: /home/annaboser/lst-super-res/experiments/exp2
+experiment_dir: /home/annaboser/lst-super-res/experiments/exp3
 
 # model params
 learning_rate: 1e-5
-epochs: 20
+epochs: 200
 batch_size: 32
 
 # augmentation probabilities

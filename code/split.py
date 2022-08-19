@@ -26,8 +26,8 @@ import re
 from datetime import datetime
 
 train_prop = .6
-val_prop = .1
-test_prop = .3
+val_prop = .2
+test_prop = .2
 
 # load config
 parser = argparse.ArgumentParser(description='Train deep learning model.')
