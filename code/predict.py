@@ -1,6 +1,8 @@
 import argparse
 import logging
 import os
+import time
+from tkinter import image_types
 
 import numpy as np
 import torch
@@ -20,17 +22,20 @@ from pathlib import Path
 def predict_img(net,
                 dataloader,
                 device, 
-                target_norms, 
-                predictions_dir):
+                target_norms,
+                basemap_norms, 
+                predictions_dir,
+                residual):
 
     net.eval()
     num_val_batches = len(dataloader)
 
     # iterate over the validation set
     for batch in tqdm(dataloader, total=num_val_batches, desc='Making predictions', unit='batch', leave=False):
-        image, name = batch['image'], batch['name']
+        image, name, target_input = batch['image'], batch['name'], batch['input_target']
         # move images and labels to correct device and type
         image = image.to(device=device, dtype=torch.float32)
+        target_input = target_input.to(device=device, dtype=torch.float32)
 
         with torch.no_grad():
             # predict the mask
@@ -40,7 +45,12 @@ def predict_img(net,
                 logging.info(f'\nPredicting image {name} ...')
 
                 # put predictions back into native format
-                output = unnormalize_target(output, target_norms)
+                # if we are calculating original values keep unnormalize_target
+                # else if we are calculating residuals, add to coarse array
+                if residual:
+                    output = unnormalize_target(target_input+output, target_norms) # image is a float 32 torch
+                else:
+                    output = unnormalize_target(output, target_norms)
 
                 # un-tensorify
                 output = output.cpu().numpy()
@@ -72,12 +82,14 @@ if __name__ == '__main__':
     cfg = yaml.safe_load(open(args.config, 'r'))
     loader_args = dict(batch_size=1, num_workers=8, pin_memory=True)
 
-    val_set = BasicDataset(cfg, args.split)
+    print(f'Using Args: "{args.split}"')
+    val_set = BasicDataset(cfg, args.split, predict="True") # add last argument predict=TRUE
     val_loader = DataLoader(val_set, shuffle=False, drop_last=True, **loader_args)
 
     net = UNet(n_channels=4, n_classes=1, bilinear=args.bilinear)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cpu')
     if args.model_epoch == 'last':
         model_epoch = cfg['epochs']
     else:
@@ -97,5 +109,11 @@ if __name__ == '__main__':
     # get the normalizations to put the outputs back in their native format
     target_norm_loc=Path(cfg['target_norm_loc'])
     target_norms = pd.read_csv(target_norm_loc, delim_whitespace=True).mean()
-
-    predict_img(net, val_loader, device, target_norms, predictions_dir)
+    basemap_norm_loc =Path(cfg['basemap_norm_loc'])
+    basemap_norms = pd.read_csv(basemap_norm_loc, delim_whitespace=True).mean()
+    # See if we calculate the residual instead
+    residual = cfg['Residual']
+    start = time.time()
+    predict_img(net, val_loader, device, target_norms, basemap_norms, predictions_dir, residual)
+    end = time.time()-start
+    print(end)

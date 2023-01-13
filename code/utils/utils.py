@@ -85,3 +85,30 @@ def unnormalize_basemap(basemap_im, basemap_norms, n_bands=3):
     input_3 = (basemap_im[[2]]*basemap_sd3) + basemap_mean3
 
     return (torch.cat([input_1, input_2, input_3], dim=0)).int()
+
+def unnormalize_image(normalized_image, basemap_norms, target_norms, n_bands = 3):
+
+    assert n_bands == 3, \
+        'Currently only basemaps with three bands are supported.'
+    
+    # retrieve the mean and sds from the basemap
+    target_mean = target_norms['mean']
+    target_sd = target_norms['sd']
+
+    # normalize
+    target_im = (normalized_image[[0]]*target_sd) + target_mean
+
+    # retrieve the mean and sds from the basemap
+    basemap_mean1 = basemap_norms['mean1'] 
+    basemap_mean2 = basemap_norms['mean2']
+    basemap_mean3 = basemap_norms['mean3']
+    basemap_sd1 = basemap_norms['sd1']
+    basemap_sd2 = basemap_norms['sd2']
+    basemap_sd3 = basemap_norms['sd3']
+
+    # normalize
+    input_1 = (normalized_image[[1]]*basemap_sd1) + basemap_mean1
+    input_2 = (normalized_image[[2]]*basemap_sd2) + basemap_mean2
+    input_3 = (normalized_image[[3]]*basemap_sd3) + basemap_mean3
+
+    return (torch.cat([target_im,input_1,input_2,input_3], dim=0)).int()

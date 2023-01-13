@@ -60,8 +60,10 @@ for image in os.listdir(predictions_dir):
     ground_truth = np.array(Image.open(os.path.join(output_target, image)))
     mask = ground_truth < 0
     ground_truth[mask] = np.nan
+    print('Ground Truth min:', np.nanmin(ground_truth), flush = True)
+    print('Ground Truth max:', np.nanmax(ground_truth), flush = True)
     plt.subplot(1, 4, 1)
-    plt.imshow(ground_truth, vmin = 268, vmax=353)
+    plt.imshow(ground_truth, vmin = np.nanmin(ground_truth), vmax= np.nanmax(ground_truth), cmap = 'coolwarm') #vmin = 268, vmax=353
     plt.title(str(image))
     plt.axis("off")
 
@@ -70,9 +72,12 @@ for image in os.listdir(predictions_dir):
     pred[mask] = np.nan
     r2_pred = get_r2(ground_truth, pred)
     mse_pred = get_mse(ground_truth, pred)
+    print('Name:', image, flush = True)
+    print('R2 pred:', r2_pred, flush = True)
+    print('MSE pred:', mse_pred, flush = True)
     mae_pred = get_mae(ground_truth, pred)
     plt.subplot(1, 4, 2)
-    plt.imshow(pred, vmin = 268, vmax=353)
+    plt.imshow(pred, vmin = np.nanmin(ground_truth), vmax= np.nanmax(ground_truth), cmap = 'coolwarm') #vmin = 268, vmax=353
     plt.title(f'Prediction: r2 = {str(r2_pred)}, mse = {str(mse_pred)}, mae = {str(mae_pred)}')
     plt.axis("off")
 
@@ -83,7 +88,7 @@ for image in os.listdir(predictions_dir):
     mse_coarse = get_mse(ground_truth, coarse)
     mae_coarse = get_mae(ground_truth, coarse)
     plt.subplot(1, 4, 3)
-    plt.imshow(coarse, vmin = 268, vmax=353)
+    plt.imshow(coarse, vmin = np.nanmin(ground_truth), vmax= np.nanmax(ground_truth), cmap = 'coolwarm') #vmin = 268, vmax=353
     plt.title(f'Coarsened input: r2 = {str(r2_coarse)}, mse = {str(mse_coarse)}, mae = {str(mae_coarse)}')
     plt.axis("off")
 
@@ -95,7 +100,7 @@ for image in os.listdir(predictions_dir):
     plt.axis("off")
 
     os.makedirs(os.path.join(cfg['experiment_dir'], "prediction_plots", str(args.split)), exist_ok=True)
-    plt.savefig(os.path.join(cfg['experiment_dir'], "prediction_plots", str(args.split), str(image).split(".tif")[0]+".png"))
+    #plt.savefig(os.path.join(cfg['experiment_dir'], "prediction_plots", str(args.split), str(image).split(".tif")[0]+".png"))
     # plt.show() # for the notebook version
     plt.close('all')
 
@@ -118,4 +123,4 @@ os.makedirs(os.path.join(cfg['experiment_dir'], 'prediction_metrics', str(args.s
 metrics_df.to_csv(os.path.join(cfg['experiment_dir'], 'prediction_metrics', str(args.split), "prediction_metrics.csv"))
 
 # Print out the average metrics
-print(metrics_df.mean())
+metrics_df.mean().to_csv(os.path.join(cfg['experiment_dir'], 'prediction_metrics', str(args.split), "prediction_metrics_mean.csv"))
