@@ -57,17 +57,18 @@ for image in os.listdir(predictions_dir):
 
     plt.figure(figsize=(24,6))
 
+    # visualize ground truth image
     ground_truth = np.array(Image.open(os.path.join(output_target, image)))
     mask = ground_truth < 0
     ground_truth[mask] = np.nan
     print('Ground Truth min:', np.nanmin(ground_truth), flush = True)
     print('Ground Truth max:', np.nanmax(ground_truth), flush = True)
     plt.subplot(1, 4, 1)
-    plt.imshow(ground_truth, vmin = np.nanmin(ground_truth), vmax= np.nanmax(ground_truth), cmap = 'coolwarm') #vmin = 268, vmax=353
+    plt.imshow(ground_truth, vmin = np.nanmin(ground_truth), vmax= np.nanmax(ground_truth), cmap = 'coolwarm') 
     plt.title(str(image))
     plt.axis("off")
 
-
+    # visualize prediction image
     pred = np.array(Image.open(os.path.join(predictions_dir, image)))
     pred[mask] = np.nan
     r2_pred = get_r2(ground_truth, pred)
@@ -77,30 +78,31 @@ for image in os.listdir(predictions_dir):
     print('MSE pred:', mse_pred, flush = True)
     mae_pred = get_mae(ground_truth, pred)
     plt.subplot(1, 4, 2)
-    plt.imshow(pred, vmin = np.nanmin(ground_truth), vmax= np.nanmax(ground_truth), cmap = 'coolwarm') #vmin = 268, vmax=353
+    plt.imshow(pred, vmin = np.nanmin(ground_truth), vmax= np.nanmax(ground_truth), cmap = 'coolwarm') 
     plt.title(f'Prediction: r2 = {str(r2_pred)}, mse = {str(mse_pred)}, mae = {str(mae_pred)}')
     plt.axis("off")
 
-
+    # visualize coarse image
     coarse = np.array(Image.open(os.path.join(input_target, image)))
     coarse[mask] = np.nan
     r2_coarse = get_r2(ground_truth, coarse)
     mse_coarse = get_mse(ground_truth, coarse)
     mae_coarse = get_mae(ground_truth, coarse)
     plt.subplot(1, 4, 3)
-    plt.imshow(coarse, vmin = np.nanmin(ground_truth), vmax= np.nanmax(ground_truth), cmap = 'coolwarm') #vmin = 268, vmax=353
+    plt.imshow(coarse, vmin = np.nanmin(ground_truth), vmax= np.nanmax(ground_truth), cmap = 'coolwarm') 
     plt.title(f'Coarsened input: r2 = {str(r2_coarse)}, mse = {str(mse_coarse)}, mae = {str(mae_coarse)}')
     plt.axis("off")
 
-
+    # visualize RGB image
     rgb = np.array(Image.open(os.path.join(input_basemap, image)))
     plt.subplot(1, 4, 4)
     plt.imshow(rgb)
     plt.title(str(landcover))
     plt.axis("off")
 
+    # create a directory to store prediction plots
     os.makedirs(os.path.join(cfg['experiment_dir'], "prediction_plots", str(args.split)), exist_ok=True)
-    #plt.savefig(os.path.join(cfg['experiment_dir'], "prediction_plots", str(args.split), str(image).split(".tif")[0]+".png"))
+    # plt.savefig(os.path.join(cfg['experiment_dir'], "prediction_plots", str(args.split), str(image).split(".tif")[0]+".png"))
     # plt.show() # for the notebook version
     plt.close('all')
 

@@ -26,7 +26,7 @@ from utils.utils import normalize_basemap
 # dataset class
 
 class BasicDataset(Dataset):
-    def __init__(self, cfg, split, predict="False"): #predict=False arg
+    def __init__(self, cfg, split, predict="False"):
 
         self.split = split
 
@@ -86,7 +86,7 @@ class BasicDataset(Dataset):
         input_target_im = self.toTensor(input_target_im) # no conversion. NA is -3.4e+38
         output_target_im = self.toTensor(output_target_im) # no conversion. NA is -3.4e+38
 
-        # if statement here based on if we want it normal or just take the difference of input/output
+        # if statement here based on if we want to train on the residual of the images
         if self.residual:
             output = normalize_target(output_target_im, self.target_norms, mean_for_nans=False) - normalize_target(input_target_im, self.target_norms, mean_for_nans=True)
         else:

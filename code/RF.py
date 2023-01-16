@@ -16,7 +16,7 @@ import pandas as pd
 from pathlib import Path
 from sklearn.ensemble import RandomForestRegressor
 from sklearn import metrics
-from utils.utils import normalize_target, unnormalize_image, unnormalize_target
+from utils.utils import normalize_target
 
 def get_args():
     parser = argparse.ArgumentParser(description='Predict masks from input images')
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     loader_args = dict(batch_size=1, num_workers=8, pin_memory=True)
 
     print(f'Using Args: "{args.split}"')
-    val_set = BasicDataset(cfg, args.split, predict="True") # add last argument predict=TRUE
+    val_set = BasicDataset(cfg, args.split, predict="True")
     val_loader = DataLoader(val_set, shuffle=False, drop_last=True, **loader_args)
 
     num_val_batches = len(val_loader)
@@ -77,8 +77,6 @@ if __name__ == '__main__':
         regressor.fit(df.iloc[:,1:4],df.iloc[:,0])
         y_pred = regressor.predict(df.iloc[:,1:4])
         
-        #output_target_im= output_target_im[output_target_im != 0]
-        #output_target_im = output_target_im[~np.isnan(output_target_im)]
 
         print('Root Mean Squared Error (RMSE):', np.sqrt(metrics.mean_squared_error(df['ground_truth'], y_pred)))
         rmse[i] = np.sqrt(metrics.mean_squared_error(df['ground_truth'], y_pred))
@@ -88,10 +86,7 @@ if __name__ == '__main__':
         ground_truth = df['ground_truth']
         y_pred = (y_pred*target_norms['sd']) + target_norms['mean']
         ground_truth = (ground_truth*target_norms['sd']) + target_norms['mean']
-        #mask = ground_truth < 0
-        #ground_truth[mask] = np.nan
-        #mask = y_pred < 0
-        #y_pred[mask] = np.nan
+
 
         new_r2_pred = round(metrics.r2_score(ground_truth[~np.isnan(ground_truth)], y_pred[~np.isnan(y_pred)]), 2)
         new_rmse_pred = round(np.sqrt(metrics.mean_squared_error(ground_truth[~np.isnan(ground_truth)], y_pred[~np.isnan(y_pred)])), 2)
@@ -109,6 +104,5 @@ if __name__ == '__main__':
         metrics_df = metrics_df.append(df2, ignore_index = True)
 
     metrics_df.to_csv(os.path.join('RF','results_3.csv'))
-    # See if we calculate the residual instead
     end = time.time()-start
     print('End Time:', end)

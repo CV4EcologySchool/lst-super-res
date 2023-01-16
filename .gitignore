@@ -163,4 +163,7 @@ RF/*
 
 metadata/*
 
-configs/e*.yaml
+configs/exp1.yaml
+configs/exp2.yaml
+configs/exp3.yaml
+configs/exp4.yaml
