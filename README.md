@@ -25,9 +25,9 @@ The processed dataset for this particular project is currently not publicly avai
 
 - `input_basemap`: This folder is constituted of 8-bit, 3-band images of your basemap of choice (in our case RGB), all the same size and resolution (e.g. 672x672 pixels at 10m resolution)
 - `input_target`: This folder is constituted of single band floating point images of your target (in our case LST) at a coarse resolution (e.g. 70m) but resampled to the same size and resolution as the basemap and the desired output. 
-- `output_target`: This folder is constituted of your labels: single band floating point images of your target (in our case LST) at the desired improved resolution. 
+- `output_target`: This folder is constituted of your labels: single band floating point images of your target (in our case LST) at the desired improved resolution (e.g. 10m in our case.) 
 
-_Note:_ Corresponding images should be named the same between folders. 
+_Note:_ Corresponding images from matching scenes should be named the same between folders, or you will get an error. 
 
 The location of some metadata must also be included in your configs file:
 - `splits_loc`: This the location of your file that determines how your dataset is to be split. It should contain a csv with the name of an image and whether it belongs to the "train", "val" or "test" set. The most recent file in this folder are used as your split. 
