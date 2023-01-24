@@ -155,3 +155,15 @@ wandb/*
 get-pip.py
 
 experiments/*
+
+For_CNN/*
+For_CNN
+
+RF/*
+
+metadata/*
+
+configs/exp1.yaml
+configs/exp2.yaml
+configs/exp3.yaml
+configs/exp4.yaml

@@ -1,8 +1,10 @@
-# Visualize model outputs
+'''
+    Visualize model outputs:
+    This script loads in either val or test data and creates predictions using the trained model of choice. 
+    These predictions are plotted and evaluated using MSE and R2_score metrics. 
 
-# This script loads in either val or test data and creates predictions using the trained model of choice. 
-# These predictions are plotted and evaluated using MSE and R2_score metrics. 
-
+    2022 Anna Boser
+'''
 from dataset_class import BasicDataset
 import argparse
 import yaml
@@ -12,6 +14,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
+from skimage.metrics import structural_similarity as ssim
+from skimage.metrics import peak_signal_noise_ratio as psnr
 
 def get_args():
     parser = argparse.ArgumentParser(description='Predict masks from input images')
@@ -49,7 +53,7 @@ def get_mae(img_1, img2): # this assumes values to be ignored are already masked
     return round(mean_absolute_error(img_1[~np.isnan(img_1)], img2[~np.isnan(img2)]), 2)
 
 # dataframe of evaluation metrics
-metrics_df = pd.DataFrame(columns=['file', 'landcover', 'r2_pred', 'mse_pred', 'mae_pred', 'r2_coarse', 'mse_coarse', 'mae_coarse'])
+metrics_df = pd.DataFrame(columns=['file', 'landcover', 'r2_pred', 'mse_pred', 'mae_pred', 'r2_coarse', 'mse_coarse', 'mae_coarse', 'ssim', 'psnr'])
 
 for image in os.listdir(predictions_dir):
     # get the landcover
@@ -57,45 +61,56 @@ for image in os.listdir(predictions_dir):
 
     plt.figure(figsize=(24,6))
 
+    # visualize ground truth image
     ground_truth = np.array(Image.open(os.path.join(output_target, image)))
     mask = ground_truth < 0
     ground_truth[mask] = np.nan
+    print('Ground Truth min:', np.nanmin(ground_truth), flush = True)
+    print('Ground Truth max:', np.nanmax(ground_truth), flush = True)
     plt.subplot(1, 4, 1)
-    plt.imshow(ground_truth, vmin = 268, vmax=353)
+    plt.imshow(ground_truth, vmin = np.nanmin(ground_truth), vmax= np.nanmax(ground_truth), cmap = 'coolwarm') 
     plt.title(str(image))
     plt.axis("off")
 
-
+    # visualize prediction image
     pred = np.array(Image.open(os.path.join(predictions_dir, image)))
     pred[mask] = np.nan
     r2_pred = get_r2(ground_truth, pred)
     mse_pred = get_mse(ground_truth, pred)
+    ssim = ssim(ground_truth, pred)
+    psnr = psnr(ground_truth, pred)
+    print('Name:', image, flush = True)
+    print('R2 pred:', r2_pred, flush = True)
+    print('MSE pred:', mse_pred, flush = True)
+    print('SSIM:', ssim, flush = True)
+    print('PSNR:', psnr, flush = True)
     mae_pred = get_mae(ground_truth, pred)
     plt.subplot(1, 4, 2)
-    plt.imshow(pred, vmin = 268, vmax=353)
+    plt.imshow(pred, vmin = np.nanmin(ground_truth), vmax= np.nanmax(ground_truth), cmap = 'coolwarm') 
     plt.title(f'Prediction: r2 = {str(r2_pred)}, mse = {str(mse_pred)}, mae = {str(mae_pred)}')
     plt.axis("off")
 
-
+    # visualize coarse image
     coarse = np.array(Image.open(os.path.join(input_target, image)))
     coarse[mask] = np.nan
     r2_coarse = get_r2(ground_truth, coarse)
     mse_coarse = get_mse(ground_truth, coarse)
     mae_coarse = get_mae(ground_truth, coarse)
     plt.subplot(1, 4, 3)
-    plt.imshow(coarse, vmin = 268, vmax=353)
+    plt.imshow(coarse, vmin = np.nanmin(ground_truth), vmax= np.nanmax(ground_truth), cmap = 'coolwarm') 
     plt.title(f'Coarsened input: r2 = {str(r2_coarse)}, mse = {str(mse_coarse)}, mae = {str(mae_coarse)}')
     plt.axis("off")
 
-
+    # visualize RGB image
     rgb = np.array(Image.open(os.path.join(input_basemap, image)))
     plt.subplot(1, 4, 4)
     plt.imshow(rgb)
     plt.title(str(landcover))
     plt.axis("off")
 
+    # create a directory to store prediction plots
     os.makedirs(os.path.join(cfg['experiment_dir'], "prediction_plots", str(args.split)), exist_ok=True)
-    plt.savefig(os.path.join(cfg['experiment_dir'], "prediction_plots", str(args.split), str(image).split(".tif")[0]+".png"))
+    # plt.savefig(os.path.join(cfg['experiment_dir'], "prediction_plots", str(args.split), str(image).split(".tif")[0]+".png"))
     # plt.show() # for the notebook version
     plt.close('all')
 
@@ -108,7 +123,9 @@ for image in os.listdir(predictions_dir):
         'mae_pred': [mae_pred], 
         'r2_coarse': [r2_coarse], 
         'mse_coarse': [mse_coarse], 
-        'mae_coarse': [mae_coarse]
+        'mae_coarse': [mae_coarse],
+        'ssim': [ssim],
+        'psnr': [psnr]
         })
     metrics_df = metrics_df.append(df2, ignore_index = True)
 
@@ -118,4 +135,4 @@ os.makedirs(os.path.join(cfg['experiment_dir'], 'prediction_metrics', str(args.s
 metrics_df.to_csv(os.path.join(cfg['experiment_dir'], 'prediction_metrics', str(args.split), "prediction_metrics.csv"))
 
 # Print out the average metrics
-print(metrics_df.mean())
+metrics_df.mean().to_csv(os.path.join(cfg['experiment_dir'], 'prediction_metrics', str(args.split), "prediction_metrics_mean.csv"))
