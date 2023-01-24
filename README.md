@@ -3,6 +3,7 @@ This repository constitutes a U-Net model whose goal is to increase the resoluti
 
 This code is highly flexible and, as with the U-Net implementation we borrow our basic structure from, takes any resonably sized image (try ~300-2000 pixels on each side). There are two inputs into the model: a basemap (in our case RGB), which should be at the resolution of the desired output, and a coarse target (in our case LST) which should be at the desired resolution of your original image you are hoping to increase the resolution of, but resaized to the same resolution as the basemap. The output which the model will be trained on should be the same size and resolution as the basemap input. 
 
+Finally, a Random Forest regressor is also available for comparing evaluation metrics as traditional pixel-based statistical models are the current state-of-the-art approach for heightening the resolution quality of LST images.
 
 ## Installation instructions
 
@@ -78,4 +79,12 @@ python code/predict_vis.py --config configs/base.yaml --split val
 ```bash
 python code/predict.py --config configs/base.yaml --split test
 python code/predict_vis.py --config configs/base.yaml --split test
+```
+
+## Random Forest Regressor Model
+
+```bash
+python code/RF.py --config configs/base.yaml --split train
+python code/RF.py --config configs/base.yaml --split val
+python code/RF.py --config configs/base.yaml --split test
 ```
