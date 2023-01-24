@@ -1,5 +1,6 @@
 '''
     This script creates the dataset class to read and process data to feed into the dataloader. 
+    The Dataset class is called for both model training and predicting in train.py and predict.py respectively.
 
     2022 Anna Boser
 '''
@@ -35,7 +36,6 @@ class BasicDataset(Dataset):
         self.transform = A.Compose([
             A.HorizontalFlip(p=cfg['HorizontalFlip']),
             A.VerticalFlip(p=cfg['VerticalFlip']),
-            A.GaussNoise(var_limit=cfg['GaussianNoise_varLimit'], p=cfg['GaussianNoise']),
             A.RandomRotate90(p=cfg['RandomRotate90'])
         ])
 

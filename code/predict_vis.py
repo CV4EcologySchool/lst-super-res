@@ -1,8 +1,10 @@
-# Visualize model outputs
+'''
+    Visualize model outputs:
+    This script loads in either val or test data and creates predictions using the trained model of choice. 
+    These predictions are plotted and evaluated using MSE and R2_score metrics. 
 
-# This script loads in either val or test data and creates predictions using the trained model of choice. 
-# These predictions are plotted and evaluated using MSE and R2_score metrics. 
-
+    2022 Anna Boser
+'''
 from dataset_class import BasicDataset
 import argparse
 import yaml
@@ -12,6 +14,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
+from skimage.metrics import structural_similarity as ssim
+from skimage.metrics import peak_signal_noise_ratio as psnr
 
 def get_args():
     parser = argparse.ArgumentParser(description='Predict masks from input images')
@@ -49,7 +53,7 @@ def get_mae(img_1, img2): # this assumes values to be ignored are already masked
     return round(mean_absolute_error(img_1[~np.isnan(img_1)], img2[~np.isnan(img2)]), 2)
 
 # dataframe of evaluation metrics
-metrics_df = pd.DataFrame(columns=['file', 'landcover', 'r2_pred', 'mse_pred', 'mae_pred', 'r2_coarse', 'mse_coarse', 'mae_coarse'])
+metrics_df = pd.DataFrame(columns=['file', 'landcover', 'r2_pred', 'mse_pred', 'mae_pred', 'r2_coarse', 'mse_coarse', 'mae_coarse', 'ssim', 'psnr'])
 
 for image in os.listdir(predictions_dir):
     # get the landcover
@@ -73,9 +77,13 @@ for image in os.listdir(predictions_dir):
     pred[mask] = np.nan
     r2_pred = get_r2(ground_truth, pred)
     mse_pred = get_mse(ground_truth, pred)
+    ssim = ssim(ground_truth, pred)
+    psnr = psnr(ground_truth, pred)
     print('Name:', image, flush = True)
     print('R2 pred:', r2_pred, flush = True)
     print('MSE pred:', mse_pred, flush = True)
+    print('SSIM:', ssim, flush = True)
+    print('PSNR:', psnr, flush = True)
     mae_pred = get_mae(ground_truth, pred)
     plt.subplot(1, 4, 2)
     plt.imshow(pred, vmin = np.nanmin(ground_truth), vmax= np.nanmax(ground_truth), cmap = 'coolwarm') 
@@ -115,7 +123,9 @@ for image in os.listdir(predictions_dir):
         'mae_pred': [mae_pred], 
         'r2_coarse': [r2_coarse], 
         'mse_coarse': [mse_coarse], 
-        'mae_coarse': [mae_coarse]
+        'mae_coarse': [mae_coarse],
+        'ssim': [ssim],
+        'psnr': [psnr]
         })
     metrics_df = metrics_df.append(df2, ignore_index = True)
 

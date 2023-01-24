@@ -1,3 +1,8 @@
+'''
+    This script evaluates the validation score for each epoch during training. It is declared in train.py. 
+
+    2022 Anna Boser
+'''
 import torch
 import torch.nn.functional as F
 from tqdm import tqdm

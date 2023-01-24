@@ -27,8 +27,6 @@ batch_size: 1
 # augmentation probabilities
 HorizontalFlip: 0.5
 VerticalFlip: 0.5
-GaussianNoise: 0
-GaussianNoise_varLimit: 0.05
 RandomRotate90: 0.5
 
 # Calculate residuals
