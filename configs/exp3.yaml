@@ -5,24 +5,24 @@ device: cuda
 num_workers: 4
 
 # dataset parameters
-data_root: /home/annaboser/lst-super-res/data/
+data_root: /home/rstofer/lst-super-res/
 
-input_basemap: /home/annaboser/lst-super-res/data/For_CNN/inputs/RGB_672_10
-input_target: /home/annaboser/lst-super-res/data/For_CNN/inputs/LST_672_70_10
-output_target: /home/annaboser/lst-super-res/data/For_CNN/outputs/LST_672_10
+input_basemap: /home/rstofer/lst-super-res/For_CNN/inputs/RGB_672_10
+input_target: /home/rstofer/lst-super-res/For_CNN/inputs/LST_672_70_10
+output_target: /home/rstofer/lst-super-res/For_CNN/outputs/LST_672_10
 
-splits_loc: /home/annaboser/lst-super-res/data/metadata/splits
+splits_loc: /home/rstofer/lst-super-res/metadata/splits
 
-target_norm_loc: /home/annaboser/lst-super-res/data/For_CNN/target_mean_sd_files672_70_10.txt
-basemap_norm_loc: /home/annaboser/lst-super-res/data/For_CNN/basemap_mean_sd_files672_70_10.txt
+target_norm_loc: /home/rstofer/lst-super-res/For_CNN/target_mean_sd_files672_70_10.txt
+basemap_norm_loc: /home/rstofer/lst-super-res/For_CNN/basemap_mean_sd_files672_70_10.txt
 
 # directory to save this experiment's models
-experiment_dir: /home/annaboser/lst-super-res/experiments/exp3
+experiment_dir: /home/rstofer/lst-super-res/experiments/exp3
 
 # model params
 learning_rate: 1e-5
-epochs: 200
-batch_size: 32
+epochs: 50
+batch_size: 1
 
 # augmentation probabilities
 HorizontalFlip: 0.5
@@ -30,3 +30,8 @@ VerticalFlip: 0.5
 GaussianNoise: 0
 GaussianNoise_varLimit: 0.05
 RandomRotate90: 0.5
+
+# Calculate residuals
+Residual: True
+
+epochs_done: 250
