@@ -1,8 +1,12 @@
 # lst-super-res
 This repository constitutes a U-Net model whose goal is to increase the resolution of a low resolution image with the help with a seperate high resolution input. Concretely, this model was developed to increase the resolution of Land Surface Temperate (LST) images from 70m to 10m with the help of a 10m RGB basemap. The code for our U-Net was adapted from https://github.com/milesial/Pytorch-UNet. 
 
-This code is highly flexible and, as with the U-Net implementation we borrow our basic structure from, takes any resonably sized image (try ~300-2000 pixels on each side). There are two inputs into the model: a basemap (in our case RGB), which should be at the resolution of the desired output, and a coarse target (in our case LST) which should be at the desired resolution of your original image you are hoping to increase the resolution of, but resaized to the same resolution as the basemap. The output which the model will be trained on should be the same size and resolution as the basemap input. 
+This code is highly flexible and, as with the U-Net implementation we borrow our basic structure from, takes any resonably sized image (try ~300-2000 pixels on each side). There are two inputs into the model: a basemap (in our case RGB), which should be at the resolution of the desired output, and a coarse target (in our case LST) which should be at the desired resolution of your original image you are hoping to increase the resolution of, but resized to the same resolution as the basemap. The output which the model will be trained on should be the same size and resolution as the basemap input. 
 
+Alternatively, this U-net model allows pre-training in which it can be fed solely high resolution basemap images (RGB). This pre-training process includes randomizing and coarsening the high resolution RGB data in order to create synthetic "LST" data so the model can increase its pattern detection capabilities across more landscapes.
+
+
+Finally, a Random Forest regressor is also available for comparing evaluation metrics as traditional pixel-based statistical models are the current state-of-the-art approach for heightening the resolution quality of LST images.
 
 ## Installation instructions
 
@@ -78,4 +82,68 @@ python code/predict_vis.py --config configs/base.yaml --split val
 ```bash
 python code/predict.py --config configs/base.yaml --split test
 python code/predict_vis.py --config configs/base.yaml --split test
+```
+
+## Pre-training
+
+0. Initial installation requirements
+
+Follow sections 1. and 2. from the installation instructions listed above. 
+
+1. Add data
+
+Similar to section `3. Add data` of the installation instructions, the following paths and other configurations must be specified in the configs/*.yaml file:
+
+- `pretrain`: This is a boolean value that when set to `TRUE`, tells the model to perform pre-training.
+
+- `pretrain_input_basemap`: This folder is constituted of 8-bit, 3-band images of your basemap of choice (in our case RGB), all the same size and resolution (e.g. 672x672 pixels at 10m resolution)
+
+- `pretrain_splits_loc`: This the location of your file that determines how your dataset is to be split. It should contain a csv with the name of an image and whether it belongs to the "train", "val" or "test" set. The most recent file in this folder are used as your split.
+
+- `pretrain_basemap_norm_loc`: This is a space delimited file that includes mean (mean1, mean2, mean3) and sd (sd1, sd2, sd3) columns with entries for all of your pre-training input basemap images (in our case, RGB). The average across these are taken to normalize the inputs.
+
+The metadata on these high resolution RGB images which includes information on their land cover type, `runs_metadata.csv` should be stored in a folder named "metadata" which is within your `data_root` as specified in your configs file.
+
+2. Split data
+
+```bash
+python3 code/split.py --config configs/base.yaml
+```
+Note: Recall that `pretrain` must be set to `TRUE` in your configs file!
+
+3. Reproduce pre-training results
+
+Follow the `Reproduce results` section described above:
+
+    1. Train:
+
+```bash
+python code/train.py --config configs/base.yaml
+```
+
+    2. Predictions and validation
+    
+```bash
+python code/predict.py --config configs/base.yaml --split train
+python code/predict.py --config configs/base.yaml --split val
+```
+
+```bash
+python code/predict_vis.py --config configs/base.yaml --split train
+python code/predict_vis.py --config configs/base.yaml --split val
+```
+
+    3. Test/inference
+
+```bash
+python code/predict.py --config configs/base.yaml --split test
+python code/predict_vis.py --config configs/base.yaml --split test
+```
+
+## Random Forest Regressor Model
+
+```bash
+python code/RF.py --config configs/base.yaml --split train
+python code/RF.py --config configs/base.yaml --split val
+python code/RF.py --config configs/base.yaml --split test
 ```

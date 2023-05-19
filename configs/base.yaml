@@ -19,6 +19,9 @@ basemap_norm_loc: /home/rstofer/lst-super-res/For_CNN/basemap_mean_sd_files672_7
 # directory to save this experiment's models
 experiment_dir: /home/rstofer/lst-super-res/experiments/base
 
+# How many epochs have been completed already
+epochs_done: 0
+
 # model params
 learning_rate: 1e-5
 epochs: 50
@@ -31,3 +34,9 @@ RandomRotate90: 0.5
 
 # Calculate residuals
 Residual: True
+
+# OPTIONAL: pretrain
+pretrain: True
+pretrain_basemap: /home/rstofer/lst-super-res/For_pretrain/tiff
+pretrain_splits_loc: /home/rstofer/lst-super-res/metadata/pretrain_splits
+pretrain_basemap_norm_loc: /home/waves/projects/lst-super-res/For_pretrain/basemap_mean_sd_files.txt

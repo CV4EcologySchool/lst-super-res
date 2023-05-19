@@ -14,8 +14,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
-from skimage.metrics import structural_similarity as ssim
-from skimage.metrics import peak_signal_noise_ratio as psnr
+from skimage import img_as_float
+from skimage.metrics import structural_similarity
 
 def get_args():
     parser = argparse.ArgumentParser(description='Predict masks from input images')
@@ -52,17 +52,26 @@ def get_mse(img_1, img2): # this assumes values to be ignored are already masked
 def get_mae(img_1, img2): # this assumes values to be ignored are already masked out (are np.nan) and the images are a numpy array
     return round(mean_absolute_error(img_1[~np.isnan(img_1)], img2[~np.isnan(img2)]), 2)
 
-# dataframe of evaluation metrics
-metrics_df = pd.DataFrame(columns=['file', 'landcover', 'r2_pred', 'mse_pred', 'mae_pred', 'r2_coarse', 'mse_coarse', 'mae_coarse', 'ssim', 'psnr'])
+def get_ssim(img_1, img2): # this assumes values to be ignored are already masked out (are np.nan) and the images are a numpy array
+    img_1 = img_1[~np.isnan(img_1)]
+    img2 = img2[~np.isnan(img2)]
+    result = structural_similarity(img_1, img2, data_range = img_1.max()-img_1.min()) 
+    return round(result, 2)
 
+# dataframe of evaluation metrics
+metrics_df = pd.DataFrame(columns=['file', 'landcover', 'r2_pred', 'mse_pred', 'mae_pred','ssim_pred','r2_coarse', 'mse_coarse', 'mae_coarse', 'ssim_coarse'])
+
+i = 1
 for image in os.listdir(predictions_dir):
+    print('start', image, flush=True)
     # get the landcover
     landcover = split_file[split_file['tiles'] == image]["Main Cover"]._values[0]
 
     plt.figure(figsize=(24,6))
 
     # visualize ground truth image
-    ground_truth = np.array(Image.open(os.path.join(output_target, image)))
+    ground_truth_im = Image.open(os.path.join(output_target, image))
+    ground_truth = np.array(ground_truth_im)
     mask = ground_truth < 0
     ground_truth[mask] = np.nan
     print('Ground Truth min:', np.nanmin(ground_truth), flush = True)
@@ -73,17 +82,17 @@ for image in os.listdir(predictions_dir):
     plt.axis("off")
 
     # visualize prediction image
-    pred = np.array(Image.open(os.path.join(predictions_dir, image)))
+    pred_im = Image.open(os.path.join(predictions_dir, image))
+    pred = np.array(pred_im)
     pred[mask] = np.nan
     r2_pred = get_r2(ground_truth, pred)
     mse_pred = get_mse(ground_truth, pred)
-    ssim = ssim(ground_truth, pred)
-    psnr = psnr(ground_truth, pred)
+    print(pred.shape, ground_truth.shape, flush = True)
+    ssim_pred = get_ssim(ground_truth, pred)
     print('Name:', image, flush = True)
     print('R2 pred:', r2_pred, flush = True)
     print('MSE pred:', mse_pred, flush = True)
-    print('SSIM:', ssim, flush = True)
-    print('PSNR:', psnr, flush = True)
+    print('SSIM pred:', ssim_pred, flush = True)
     mae_pred = get_mae(ground_truth, pred)
     plt.subplot(1, 4, 2)
     plt.imshow(pred, vmin = np.nanmin(ground_truth), vmax= np.nanmax(ground_truth), cmap = 'coolwarm') 
@@ -93,6 +102,8 @@ for image in os.listdir(predictions_dir):
     # visualize coarse image
     coarse = np.array(Image.open(os.path.join(input_target, image)))
     coarse[mask] = np.nan
+    ssim_coarse = get_ssim(ground_truth, coarse)
+    print('SSIM coarse:', ssim_coarse, flush = True)
     r2_coarse = get_r2(ground_truth, coarse)
     mse_coarse = get_mse(ground_truth, coarse)
     mae_coarse = get_mae(ground_truth, coarse)
@@ -120,13 +131,14 @@ for image in os.listdir(predictions_dir):
         'landcover': [landcover], 
         'r2_pred': [r2_pred], 
         'mse_pred': [mse_pred], 
-        'mae_pred': [mae_pred], 
+        'mae_pred': [mae_pred],
+        'ssim_pred': [ssim_pred], 
         'r2_coarse': [r2_coarse], 
         'mse_coarse': [mse_coarse], 
         'mae_coarse': [mae_coarse],
-        'ssim': [ssim],
-        'psnr': [psnr]
+        'ssim_coarse': [ssim_coarse]
         })
+    print('done one!', flush = True)
     metrics_df = metrics_df.append(df2, ignore_index = True)
 
 

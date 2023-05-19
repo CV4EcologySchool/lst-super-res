@@ -33,6 +33,8 @@ def train_net(cfg,
 
     # get hyperparameters from configurations
     epochs = cfg['epochs']
+    epochs_done = cfg['epochs_done']
+    all_epochs = epochs + epochs_done
     batch_size = cfg['batch_size']
     learning_rate = float(cfg['learning_rate'])
     
@@ -69,9 +71,10 @@ def train_net(cfg,
 
     # 5. Begin training
     for epoch in range(1, epochs+1):
+        epoch += epochs_done
         net.train()
         epoch_loss = 0
-        with tqdm(total=len(train_loader), desc=f'Epoch {epoch}/{epochs}', unit='img') as pbar:
+        with tqdm(total=len(train_loader), desc=f'Epoch {epoch}/{all_epochs}', unit='img') as pbar:
             for batch in train_loader:
                 images = batch['image']
                 true_labels = batch['label']
@@ -148,10 +151,10 @@ def train_net(cfg,
 
         if save_checkpoint:
             Path(dir_checkpoint).mkdir(parents=True, exist_ok=True)
-            if epoch > 1:
-                old_checkpoint = os.path.join(cfg['experiment_dir'], 'checkpoints/')
-                shutil.rmtree(old_checkpoint)
-                Path(dir_checkpoint).mkdir(parents=True, exist_ok=True)
+            #if epoch > 1:
+            #    old_checkpoint = os.path.join(cfg['experiment_dir'], 'checkpoints/')
+            #    shutil.rmtree(old_checkpoint)
+            #    Path(dir_checkpoint).mkdir(parents=True, exist_ok=True)
             torch.save(net.state_dict(), str(dir_checkpoint / 'checkpoint_epoch{}.pth'.format(epoch)))
             logging.info(f'Checkpoint {epoch} saved!')
 

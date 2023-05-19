@@ -83,7 +83,7 @@ if __name__ == '__main__':
     loader_args = dict(batch_size=1, num_workers=8, pin_memory=True)
 
     print(f'Using Args: "{args.split}"')
-    val_set = BasicDataset(cfg, args.split, predict="True") # add last argument predict=TRUE
+    val_set = BasicDataset(cfg, args.split, predict="True")
     val_loader = DataLoader(val_set, shuffle=False, drop_last=True, **loader_args)
 
     net = UNet(n_channels=4, n_classes=1, bilinear=args.bilinear)
