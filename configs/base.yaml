@@ -36,7 +36,7 @@ RandomRotate90: 0.5
 Residual: True
 
 # OPTIONAL: pretrain
-pretrain: True
+pretrain: False
 pretrain_basemap: /home/rstofer/lst-super-res/For_pretrain/tiff
 pretrain_splits_loc: /home/rstofer/lst-super-res/metadata/pretrain_splits
 pretrain_basemap_norm_loc: /home/waves/projects/lst-super-res/For_pretrain/basemap_mean_sd_files.txt

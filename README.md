@@ -102,14 +102,13 @@ Similar to section `3. Add data` of the installation instructions, the following
 
 - `pretrain_basemap_norm_loc`: This is a space delimited file that includes mean (mean1, mean2, mean3) and sd (sd1, sd2, sd3) columns with entries for all of your pre-training input basemap images (in our case, RGB). The average across these are taken to normalize the inputs.
 
-The metadata on these high resolution RGB images which includes information on their land cover type, `runs_metadata.csv` should be stored in a folder named "metadata" which is within your `data_root` as specified in your configs file.
+The metadata on these high resolution RGB images which includes information on their land cover type, `pretrain_metadata.csv` should be stored in a folder named "metadata" which is within your `data_root` as specified in your configs file.
 
 2. Split data
 
 ```bash
 python3 code/split.py --config configs/base.yaml
 ```
-Note: Recall that `pretrain` must be set to `TRUE` in your configs file!
 
 3. Reproduce pre-training results
 

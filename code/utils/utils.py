@@ -33,6 +33,22 @@ def normalize_target(target_im, target_norms, mean_for_nans=True):
     
     return target_im
 
+def normalize_pretrain(target_im, target_mean, target_sd, mean_for_nans=True):
+
+    # retrieve the mean and sds from the basemap
+    target_mean = target_mean
+    target_sd = target_sd
+
+    target_im[target_im<=-3.4e+30] = float('nan')      # -3.4e+38 to NaN
+
+    # normalize
+    target_im = (target_im - target_mean)/target_sd
+
+    if mean_for_nans==True:
+        target_im[torch.isnan(target_im)] = 0
+    
+    return target_im
+
 def unnormalize_target(target_im, target_norms):
 
     # retrieve the mean and sds from the basemap
