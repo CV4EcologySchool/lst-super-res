@@ -1,3 +1,9 @@
+'''
+    This script contains miscellaneous util functions that are declared in other .py files.
+
+    2022 Anna Boser
+'''
+
 import matplotlib.pyplot as plt
 import torch
 
@@ -128,3 +134,66 @@ def unnormalize_image(normalized_image, basemap_norms, target_norms, n_bands = 3
     input_3 = (normalized_image[[3]]*basemap_sd3) + basemap_mean3
 
     return (torch.cat([target_im,input_1,input_2,input_3], dim=0)).int()
+
+def randomize(r,g,b, seed = 1234):
+    # Set seed
+    random.seed(seed)
+    # Declare number of r/g/b bands that will be iterated on
+    rgb_num = np.random.randint(2,10)
+    rgb_list = []
+    # Generate list of r/g/b bands to iterate on
+    for i in range(rgb_num):
+        rgb_list.append(np.random.choice(['r','g','b']))
+    op_num = rgb_num - 1
+    ops = {'+':operator.add,
+        '-':operator.sub,
+        '*':operator.mul,
+        '/':operator.truediv}
+    op_list = []
+    counter = 0
+    # Perform correct operation according to proper r/g/b combination
+    for i in range(op_num):
+        # Create list of randomized operations
+        op_list.append(np.random.choice(list(ops.keys())))
+        # Perform first operation between two bands
+        if counter == 0:
+            if (rgb_list[i] == 'r') & (rgb_list[i+1] == 'r'):
+                rgb_list[i+1] = ops.get(op_list[i])(r,r)
+            elif (rgb_list[i] == 'r') & (rgb_list[i+1] == 'g'):
+                rgb_list[i+1] = ops.get(op_list[i])(r,g)
+            elif (rgb_list[i] == 'r') & (rgb_list[i+1] == 'b'):
+                rgb_list[i+1] = ops.get(op_list[i])(r,b)
+            elif (rgb_list[i] == 'g') & (rgb_list[i+1] == 'r'):
+                rgb_list[i+1] = ops.get(op_list[i])(g,r)
+            elif (rgb_list[i] == 'g') & (rgb_list[i+1] == 'g'):
+                rgb_list[i+1] = ops.get(op_list[i])(g,g)
+            elif (rgb_list[i] == 'g') & (rgb_list[i+1] == 'b'):
+                rgb_list[i+1] = ops.get(op_list[i])(g,b)
+            elif (rgb_list[i] == 'b') & (rgb_list[i+1] == 'r'):
+                rgb_list[i+1] = ops.get(op_list[i])(b,r)
+            elif (rgb_list[i] == 'b') & (rgb_list[i+1] == 'g'):
+                rgb_list[i+1] = ops.get(op_list[i])(b,g)
+            elif (rgb_list[i] == 'b') & (rgb_list[i+1] == 'b'):
+                rgb_list[i+1] = ops.get(op_list[i])(b,b)
+            rgb_list[i+1] += 1 # Ensure no division by 0 occurs
+            counter += 1
+        # Perform next operation
+        else:
+            # Normalize data if values start to explode
+            if np.max(np.abs(rgb_list[i])) > 5000:
+                rgb_list[i+1] = ( rgb_list[i] - np.mean(rgb_list[i]) )/ np.std(rgb_list[i]) 
+                continue
+            if rgb_list[i+1] == 'r':
+                rgb_list[i+1] = ops.get(op_list[i])(rgb_list[i],r)
+            elif rgb_list[i+1] == 'g':
+                rgb_list[i+1] = ops.get(op_list[i])(rgb_list[i],g)
+            elif rgb_list[i+1] == 'b':
+                rgb_list[i+1] = ops.get(op_list[i])(rgb_list[i],b) 
+    # Store mean and standard deviation of randomized output
+    random_mean = np.mean(rgb_list[-1])
+    random_sd = np.std(rgb_list[-1])
+    # Print mean and standard deviation
+    print('Mean:', random_mean, 'SD:', random_sd, flush = True)
+    # Convert randomized output to Image object
+    randomized_image = Image.fromarray(rgb_list[-1])
+    return randomized_image, random_mean, random_sd # Returns randomized output including its mean and standard deviation

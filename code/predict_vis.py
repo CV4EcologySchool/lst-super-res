@@ -1,7 +1,7 @@
 '''
     Visualize model outputs:
     This script loads in either val or test data and creates predictions using the trained model of choice. 
-    These predictions are plotted and evaluated using MSE and R2_score metrics. 
+    These predictions are plotted and evaluated using MSE, SSIM, and R2_score metrics. 
 
     2022 Anna Boser
 '''
@@ -29,7 +29,11 @@ config = args.config
 
 print(f'Using config "{config}"')
 cfg = yaml.safe_load(open(config, 'r'))
-input_basemap = cfg["input_basemap"]
+pretrain = cfg["pretrain"]
+if pretrain:
+    input_basemap = cfg["pretrain_basemap"]
+else:
+    input_basemap = cfg["input_basemap"]
 input_target = cfg["input_target"]
 output_target = cfg["output_target"]
 

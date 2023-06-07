@@ -38,6 +38,7 @@ class BasicDataset(Dataset):
         self.toTensor = ToTensor()
         self.predict = predict
         self.split = split
+        self.seed = cfg['Seed']
 
         self.transform = A.Compose([
                 A.HorizontalFlip(p=cfg['HorizontalFlip']),
@@ -129,58 +130,6 @@ class BasicDataset(Dataset):
         else: 
             raise Exception('Image must be one or three bands')
     @staticmethod
-    def randomize(r,g,b):
-        rgb_num = np.random.randint(2,10)
-        rgb_list = []
-        # Generate list of r/g/b bands to iterate on
-        for i in range(rgb_num):
-            rgb_list.append(np.random.choice(['r','g','b']))
-        op_num = rgb_num - 1
-        ops = {'+':operator.add,
-            '-':operator.sub,
-            '*':operator.mul,
-            '/':operator.truediv}
-        op_list = []
-        counter = 0
-        # Perform correct operation according to proper r/g/b combination
-        for i in range(op_num):
-            # Create list of randomized operations
-            op_list.append(np.random.choice(list(ops.keys())))
-            if counter == 0:
-                if (rgb_list[i] == 'r') & (rgb_list[i+1] == 'r'):
-                    rgb_list[i+1] = ops.get(op_list[i])(r,r)
-                elif (rgb_list[i] == 'r') & (rgb_list[i+1] == 'g'):
-                    rgb_list[i+1] = ops.get(op_list[i])(r,g)
-                elif (rgb_list[i] == 'r') & (rgb_list[i+1] == 'b'):
-                    rgb_list[i+1] = ops.get(op_list[i])(r,b)
-                elif (rgb_list[i] == 'g') & (rgb_list[i+1] == 'r'):
-                    rgb_list[i+1] = ops.get(op_list[i])(g,r)
-                elif (rgb_list[i] == 'g') & (rgb_list[i+1] == 'g'):
-                    rgb_list[i+1] = ops.get(op_list[i])(g,g)
-                elif (rgb_list[i] == 'g') & (rgb_list[i+1] == 'b'):
-                    rgb_list[i+1] = ops.get(op_list[i])(g,b)
-                elif (rgb_list[i] == 'b') & (rgb_list[i+1] == 'r'):
-                    rgb_list[i+1] = ops.get(op_list[i])(b,r)
-                elif (rgb_list[i] == 'b') & (rgb_list[i+1] == 'g'):
-                    rgb_list[i+1] = ops.get(op_list[i])(b,g)
-                elif (rgb_list[i] == 'b') & (rgb_list[i+1] == 'b'):
-                    rgb_list[i+1] = ops.get(op_list[i])(b,b)
-                rgb_list[i+1] += 1
-                counter += 1
-            else:
-                if rgb_list[i+1] == 'r':
-                    rgb_list[i+1] = ops.get(op_list[i])(rgb_list[i],r)
-                elif rgb_list[i+1] == 'g':
-                    rgb_list[i+1] = ops.get(op_list[i])(rgb_list[i],g)
-                elif rgb_list[i+1] == 'b':
-                    rgb_list[i+1] = ops.get(op_list[i])(rgb_list[i],b)
-                rgb_list[i+1] += 1
-        random_mean = np.mean(rgb_list[-1])
-        stats.describe(rgb_list[-1])
-        random_sd = np.std(rgb_list[-1])
-        randomized_image = Image.fromarray(rgb_list[-1])
-        return randomized_image, random_mean, random_sd # Returns result of last evaluation
-    @staticmethod
     def coarsen(image, downsample = 8):
         # first, change to 0-1
         ds_array = np.array(image)/255
@@ -202,7 +151,7 @@ class BasicDataset(Dataset):
             r = input_basemap_np[:,:,0] + 1
             g = input_basemap_np[:,:,1] + 1
             b = input_basemap_np[:,:,2] + 1
-            output_target_im, target_mean, target_sd = self.randomize(r,g,b)
+            output_target_im, target_mean, target_sd = self.randomize(r,g,b, seed = self.seed)
             input_target_im = self.coarsen(output_target_im)
         else:
             input_target_im = list(self.input_target.glob(name + '.tif*'))

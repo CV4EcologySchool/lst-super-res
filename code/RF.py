@@ -44,23 +44,19 @@ if __name__ == '__main__':
     loader_args = dict(batch_size=1, num_workers=8, pin_memory=True)
 
     print(f'Using Args: "{args.split}"')
-    val_set = BasicDataset(cfg, args.split, predict="True")
-    val_loader = DataLoader(val_set, shuffle=False, drop_last=True, **loader_args)
+    data_set = BasicDataset(cfg, args.split, predict="True") 
+    data_loader = DataLoader(data_set, shuffle=False, drop_last=True, **loader_args)
 
-    num_val_batches = len(val_loader)
-
-    # get the directory to save predictions to
-    predictions_dir = os.path.join('RF', 'predictions', str(args.split))
-    os.makedirs(predictions_dir, exist_ok=True)
+    num_data_batches = len(data_loader)
 
     output_target = cfg["output_target"]
-    target_norms = pd.read_csv(Path(cfg['target_norm_loc']), delim_whitespace=True).mean()
-    metrics_df = pd.DataFrame(columns=['file', 'landcover', 'r2_pred', 'rmse_pred'])
+    target_norms = pd.read_csv(Path(cfg['target_norm_loc']), delim_whitespace=True).mean()  # Read target normalization values from a file
+    metrics_df = pd.DataFrame(columns=['file', 'landcover', 'r2_pred', 'rmse_pred']) # Create an empty DataFrame to store prediction metrics
 
-    rmse = np.zeros(shape= len(val_loader))
-    r2 = np.zeros(shape= len(val_loader))
+    rmse = np.zeros(shape= len(data_loader))
+    r2 = np.zeros(shape= len(data_loader))
     i = 0
-    for batch in tqdm(val_loader, total=num_val_batches, desc='Making predictions', unit='batch', leave=False):
+    for batch in tqdm(data_loader, total=num_data_batches, desc='Making predictions', unit='batch', leave=False):
         # Get each individual image data and metadata
         image, name, target_input, landcover = batch['image'], batch['name'], batch['input_target'], batch['landcover']
 
@@ -102,6 +98,6 @@ if __name__ == '__main__':
         metrics_df = metrics_df.append(df2, ignore_index = True)
 
     # Save dataframe as .csv file
-    metrics_df.to_csv(os.path.join('RF','results.csv'))
+    metrics_df.to_csv(os.path.join('RF','results.csv')) # Save the evaluation metrics dataframe to a CSV file
     end = time.time()-start
-    print('End Time:', end)
+    print('End Time:', end) # Print the time taken for the prediction process to complete

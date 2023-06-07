@@ -44,8 +44,20 @@ _Note:_ It is OK to have NA values in the input and output target, but not in yo
 
 4. Split data
 
+Input:
+
+`--config`: Path to the desired configuration file.  
+
+`data_root/metadata.csv`: a CSV file containing metadata inforamtion about the data including name, landcover type, and location.
+
+Output:
+
+`data_root/metadata/splits`: Folder containing a CSV file that indicates which observation belongs to each split and a TXT file that provides additional information regarding the split. Note that `data_root` is declared in your specified configuration file.
+
+_Note:_ If `pretrain` is set to `True` in your configuration file, the metadata information should be stored as a CSV file under `data_root/pretrain_metadata.csv`. The output folder will be `data_root/metadata/pretrain_splits`.
+
 ```bash
-python3 code/split.py
+python3 code/split.py --config configs/base.yaml
 ```
 
 ## Reproduce results
@@ -54,11 +66,19 @@ python3 code/split.py
 
 In the configs folder, create a *.yaml file for your experiment. See base.yaml as a example. 
 
+Input:  
+
+`--config`: Path to the desired configuration file.  
+
+Output:  
+
+`experiment_dir`: A folder containing model checkpoints, a copy of the configuration file used, and a copy of split info used during training. Path specification is declared in your configuration file.
+
 ```bash
 python code/train.py --config configs/base.yaml
 ```
 
-This will create a trained model which is saved at each epoch in the checkpoints folder
+This will create a trained model which is saved at each epoch in the checkpoints folder.
 
 2. Predictions and validation
 
@@ -66,11 +86,34 @@ During training, weights and biases (wandb) is used to automatically generate vi
 
 Generate predictions. These will be saved in the predictions folder of your experiment. If predictions are desired for another split, you can also specify 'test' or 'train'. 
 
+Input:  
+
+`--config`: Path to the desired configuration file.  
+
+`--split`: Specifies the dataset split to be used for predicting target labels.
+
+Output:  
+
+`experiment_dir/predictions`: A folder containing all predicted target images separated by split
+
 ```bash
 python code/predict.py --config configs/base.yaml --split train
 python code/predict.py --config configs/base.yaml --split val
 ```
+
 Then, visualize and calcualte metrics for your predictions. These are also saved in your experiments folder. 
+
+Input:  
+
+`--config`: Path to the desired configuration file.  
+
+`--split`: Specifies the dataset split to be used for visualizing predicted target labels.
+
+Output:  
+
+`experiment_dir/prediction_metrics`: A folder containing a CSV file that includes evaluation metrics (R2, SSIM, MSE) for each prediction separated by split
+
+`experiment_dir/prediction_plots`: A folder containing PNG files that includes the basemap image, coarsened target image, predicted target image, and ground truth image for each prediction separated by split. Also shows image name, landcover type, prediction metrics and coarsened input metrics.
 
 ```bash
 python code/predict_vis.py --config configs/base.yaml --split train
@@ -79,16 +122,21 @@ python code/predict_vis.py --config configs/base.yaml --split val
 
 3. Test/inference
 
+Input:  
+
+`--config`: Path to the desired configuration file.  
+
+`--split`: Specifies the dataset split to be used for predicting target labels and prediction visualization.
+
+Output:  
+
+`/RF/results.csv`: A CSV file that includes the file name, landcover type, as well as the R2 and RMSE values.
+
 ```bash
 python code/predict.py --config configs/base.yaml --split test
 python code/predict_vis.py --config configs/base.yaml --split test
 ```
 
-## Pre-training
-
-0. Initial installation requirements
-
-Follow sections 1. and 2. from the installation instructions listed above. 
 
 1. Add data
 
@@ -104,45 +152,40 @@ Similar to section `3. Add data` of the installation instructions, the following
 
 The metadata on these high resolution RGB images which includes information on their land cover type, `pretrain_metadata.csv` should be stored in a folder named "metadata" which is within your `data_root` as specified in your configs file.
 
-2. Split data
-
-```bash
-python3 code/split.py --config configs/base.yaml
-```
-
-3. Reproduce pre-training results
-
-Follow the `Reproduce results` section described above:
-
-    1. Train:
-
-```bash
-python code/train.py --config configs/base.yaml
-```
-
-    2. Predictions and validation
-    
-```bash
-python code/predict.py --config configs/base.yaml --split train
-python code/predict.py --config configs/base.yaml --split val
-```
-
-```bash
-python code/predict_vis.py --config configs/base.yaml --split train
-python code/predict_vis.py --config configs/base.yaml --split val
-```
-
-    3. Test/inference
-
-```bash
-python code/predict.py --config configs/base.yaml --split test
-python code/predict_vis.py --config configs/base.yaml --split test
-```
-
 ## Random Forest Regressor Model
+
+The random forest regressor model, which represents the current state-of-the-art approach for enhancing the resolution of land surface temperature images, employs a statistical pixel-based technique. In order to evaluate its performance against our custom U-Net model, we employ the random forest regressor.
+
+Input:  
+
+`--config`: Path to the desired configuration file.  
+
+`--split`: Specifies the dataset split to be used for the random forest regressor.
+
+Output:  
+
+`/RF/results.csv`: A CSV file that includes the file name, landcover type, as well as the R2 and RMSE values.
+
+Reproduce Results:
 
 ```bash
 python code/RF.py --config configs/base.yaml --split train
 python code/RF.py --config configs/base.yaml --split val
 python code/RF.py --config configs/base.yaml --split test
 ```
+
+
+## File Table
+
+| File Name and Location  | Description |
+| ------------- | ------------- |
+| `code/dataset_class.py`  | This script creates the dataset class to read and process data to feed into the dataloader. The Dataset class is called for both model training and predicting in `code/train.py` and `code/predict.py` respectively.|
+| `code/evaluate.py`  | This script evaluates the validation score for each epoch during training. It is declared in `code/train.py`.|
+| `code/predict_vis.py`  | This script loads in either val or test data and creates predictions using the trained model of choice.These predictions are plotted and evaluated using MSE, SSIM, and R2_score metrics.|
+| `code/predict.py`  | This script performs predictions using the trained U-Net model on the validation set.  |
+| `code/RF.py`  | This script enhances coarsened LST images using a Random Forest regressor.  |
+| `code/split.py`  | This script will create a file that specifies the training/validation/test split for the data.  |
+| `code/train.py`  | This script trains a U-Net model given 3 channel basemap images and 1 channel coarsened target image to predict a 1 channel high resolution target image.  |
+| `utils/utils.py`  | This script contains miscellaneous util functions that are declared in other .py files.  |
+| `unet/unet_model.py`  | This script contains the full assembly of the U-Net parts to form the complete network  |
+| `unet/unet_parts.py`  | This script conatins class definitions of each part of the U-Net model  |

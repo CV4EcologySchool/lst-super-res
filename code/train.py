@@ -1,3 +1,8 @@
+'''
+    This script trains a U-Net model given 3 channel basemap images and 1 channel coarsened target image to predict a 1 channel high resolution target image.
+
+    2022 Anna Boser
+'''
 import argparse
 import logging
 import sys

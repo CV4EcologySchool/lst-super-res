@@ -1,3 +1,8 @@
+'''
+    This script performs predictions using the trained UNet model on the validation set.
+
+    2022 Anna Boser
+'''
 import argparse
 import logging
 import os
