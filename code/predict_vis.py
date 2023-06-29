@@ -5,67 +5,18 @@
 
     2022 Anna Boser
 '''
-from dataset_class import BasicDataset
-import argparse
-import yaml
-import os
-from PIL import Image
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
-from skimage import img_as_float
-from skimage.metrics import structural_similarity
 
-def get_args():
-    parser = argparse.ArgumentParser(description='Predict masks from input images')
-    parser.add_argument('--config', help='Path to config file', default='configs/base.yaml')
-    parser.add_argument('--split', default='val', help='The split to make predictions for (train, val, or test)')
 
-    return parser.parse_args()
-args = get_args()
 
-config = args.config
-
-print(f'Using config "{config}"')
-cfg = yaml.safe_load(open(config, 'r'))
-pretrain = cfg["pretrain"]
-if pretrain:
-    input_basemap = cfg["pretrain_basemap"]
-else:
-    input_basemap = cfg["input_basemap"]
-input_target = cfg["input_target"]
-output_target = cfg["output_target"]
-
-# the predictions of interest
-predictions_dir = os.path.join(cfg['experiment_dir'], 'predictions', str(args.split))
-
-#get most recent split with info about the landcover
-splits_loc = cfg['splits_loc']
 
 split_files = [file for file in os.listdir(splits_loc) if file.endswith(".csv")] # list all the different splits
 recent_split = sorted(split_files, key=lambda fn:os.path.getctime(os.path.join(splits_loc, fn)))[-1] # get most recent split
 split_file = pd.read_csv(os.path.join(splits_loc, recent_split))
 
-def get_r2(img_1, img2): # this assumes values to be ignored are already masked out (are np.nan) and the images are a numpy array
-    return round(r2_score(img_1[~np.isnan(img_1)], img2[~np.isnan(img2)]), 2)
-
-def get_mse(img_1, img2): # this assumes values to be ignored are already masked out (are np.nan) and the images are a numpy array
-    return round(mean_squared_error(img_1[~np.isnan(img_1)], img2[~np.isnan(img2)]), 2)
-
-def get_mae(img_1, img2): # this assumes values to be ignored are already masked out (are np.nan) and the images are a numpy array
-    return round(mean_absolute_error(img_1[~np.isnan(img_1)], img2[~np.isnan(img2)]), 2)
-
-def get_ssim(img_1, img2): # this assumes values to be ignored are already masked out (are np.nan) and the images are a numpy array
-    img_1 = img_1[~np.isnan(img_1)]
-    img2 = img2[~np.isnan(img2)]
-    result = structural_similarity(img_1, img2, data_range = img_1.max()-img_1.min()) 
-    return round(result, 2)
 
 # dataframe of evaluation metrics
 metrics_df = pd.DataFrame(columns=['file', 'landcover', 'r2_pred', 'mse_pred', 'mae_pred','ssim_pred','r2_coarse', 'mse_coarse', 'mae_coarse', 'ssim_coarse'])
 
-i = 1
 for image in os.listdir(predictions_dir):
     print('start', image, flush=True)
     # get the landcover
@@ -125,7 +76,7 @@ for image in os.listdir(predictions_dir):
 
     # create a directory to store prediction plots
     os.makedirs(os.path.join(cfg['experiment_dir'], "prediction_plots", str(args.split)), exist_ok=True)
-    # plt.savefig(os.path.join(cfg['experiment_dir'], "prediction_plots", str(args.split), str(image).split(".tif")[0]+".png"))
+    plt.savefig(os.path.join(cfg['experiment_dir'], "prediction_plots", str(args.split), str(image).split(".tif")[0]+".png"))
     # plt.show() # for the notebook version
     plt.close('all')
 

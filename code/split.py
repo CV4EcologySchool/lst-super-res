@@ -67,7 +67,7 @@ if pretrain:
     # save the split
 
     # create the splits folder in the metadata folder if it doesn't exist already
-    output_dir = os.path.join(data_root, "metadata", "pretrain_splits")
+    output_dir = os.path.join(data_root, "metadata", "pretrain_test_splits")
 
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
@@ -104,7 +104,7 @@ if pretrain:
     state = get_props('State')
 
     # create the splits folder in the metadata folder if it doesn't exist already
-    output_dir = os.path.join(data_root, "metadata", "pretrain_splits", "info")
+    output_dir = os.path.join(data_root, "metadata", "pretrain_test_splits", "info")
 
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
