@@ -150,10 +150,10 @@ class BasicDataset(Dataset):
         assert input_target_im.size == output_target_im.size, \
             f'Input and output {name} should be the same size, but are {input_target_im.size} and {output_target_im.size}'
         
-        print('Dataloader Input Target min:', name, np.nanmin(input_target_im), flush = True)
-        print('Dataloader Input Target max:', name, np.nanmax(input_target_im), flush = True)
-        print('Dataloader Output Target min:', name, np.nanmin(output_target_im), flush = True)
-        print('Dataloader Output Target max:', name, np.nanmax(output_target_im), flush = True)
+        #print('Dataloader Input Target min:', name, np.nanmin(input_target_im), flush = True)
+        #print('Dataloader Input Target max:', name, np.nanmax(input_target_im), flush = True)
+        #print('Dataloader Output Target min:', name, np.nanmin(output_target_im), flush = True)
+        #print('Dataloader Output Target max:', name, np.nanmax(output_target_im), flush = True)
 
         input_target, output_target, input, output = self.preprocess(input_basemap_im, input_target_im, output_target_im, target_mean, target_sd)
         

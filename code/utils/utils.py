@@ -14,7 +14,9 @@ import skimage
 import scipy.ndimage
 from scipy import stats
 import tifffile
-
+from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
+from skimage import img_as_float
+from skimage.metrics import structural_similarity
 
 def plot_img_and_mask(img, mask):
     classes = mask.shape[0] if len(mask.shape) > 2 else 1
@@ -273,3 +275,19 @@ def coarsen_image(image, factor):
     coarsened_image = resized_image.resize((image.width, image.height), resample=Image.Resampling.BILINEAR)
 
     return coarsened_image
+
+
+def get_r2(img_1, img2): # this assumes values to be ignored are already masked out (are np.nan) and the images are a numpy array
+    return round(r2_score(img_1[~np.isnan(img_1)], img2[~np.isnan(img2)]), 2)
+
+def get_mse(img_1, img2): # this assumes values to be ignored are already masked out (are np.nan) and the images are a numpy array
+    return round(mean_squared_error(img_1[~np.isnan(img_1)], img2[~np.isnan(img2)]), 2)
+
+def get_mae(img_1, img2): # this assumes values to be ignored are already masked out (are np.nan) and the images are a numpy array
+    return round(mean_absolute_error(img_1[~np.isnan(img_1)], img2[~np.isnan(img2)]), 2)
+
+def get_ssim(img_1, img2): # this assumes values to be ignored are already masked out (are np.nan) and the images are a numpy array
+    img_1 = img_1[~np.isnan(img_1)]
+    img2 = img2[~np.isnan(img2)]
+    result = structural_similarity(img_1, img2, data_range = img_1.max()-img_1.min()) 
+    return round(result, 2)
